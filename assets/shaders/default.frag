@@ -1,19 +1,44 @@
 #version 330 core
 
-// Outputs colors in RGBA
+// =======================================
+// OUTPUT COLOR
+// =======================================
+
 out vec4 FragColor;
 
+// =======================================
+// INPUT FROM VERTEX SHADER
+// =======================================
 
-// Inputs the color from the Vertex Shader
-in vec3 color;
-// Inputs the texture coordinates from the Vertex Shader
-in vec2 texCoord;
+in vec2 TexCoord;
 
-// Gets the Texture Unit from the main function
-uniform sampler2D tex0;
+// =======================================
+// UNIFORMS (Set from C++)
+// =======================================
 
+// Color for non-textured squares
+uniform vec3 uColor;
 
+// Texture sampler
+uniform sampler2D texture1;
+
+// Whether to use texture or not
+uniform bool useTexture;
+
+// =======================================
+// MAIN
+// =======================================
 void main()
 {
-	FragColor = texture(tex0, texCoord);
+    // If we want to use texture
+    if (useTexture)
+    {
+        // Sample texture color
+        FragColor = texture(texture1, TexCoord);
+    }
+    else
+    {
+        // Use plain color
+        FragColor = vec4(uColor, 1.0);
+    }
 }
