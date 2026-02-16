@@ -1,35 +1,34 @@
 #include<iostream>
 #include<SDL2/SDL.h>
 
+#include"RenderWindow.h"
+
 const int WIDTH = 800, HEIGHT = 600;
 
 int main(int argc, char* argv[])
 {
-    SDL_Init(SDL_INIT_VIDEO);
-    SDL_Window* window = SDL_CreateWindow("SDL2 Window", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
-    if (window == nullptr)
+    // Initialize SDL
+    if (SDL_Init(SDL_INIT_VIDEO) > 0)
     {
-        std::cerr << "Failed to create window: " << SDL_GetError() << std::endl;
-        return -1;
+        std::cout << "SDL could not initialize! SDL_Error: " << SDL_GetError() << std::endl;
+        return 1;
     }
+    // Create a window
+    RenderWindow window("SDL Window", WIDTH, HEIGHT);
 
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    if (renderer == nullptr)
-    {
-        std::cerr << "Failed to create renderer: " << SDL_GetError() << std::endl;
-        SDL_DestroyWindow(window);
-        return -1;
+    SDL_Event event;
+    // Main loop
+    while(true){
+        while (SDL_PollEvent(&event)){
+            if (event.type == SDL_QUIT)
+            {
+                return false;
+            }
+        }
     }
-
-    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); // Red color
-    SDL_RenderClear(renderer);
-    SDL_RenderPresent(renderer);
-
-    SDL_Delay(3000); // Wait for 3 seconds
-
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
+    // Clean up and quit SDL
+    window.cleanUp();
     SDL_Quit();
 
-    return EXIT_SUCCESS;
+    return 0;
 }

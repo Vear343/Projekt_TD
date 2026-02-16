@@ -4,13 +4,11 @@
         {
             "label": "build SDL2 app",
             "type": "shell",
-            "command": "g++",
+            "command": "powershell",
             "args": [
-                "-I", "${workspaceFolder}/src/include",
-                "-L", "${workspaceFolder}/src/lib",
-                "main.cpp",
-                "-o", "${workspaceFolder}/main.exe",
-                "-lmingw32", "-lSDL2main", "-lSDL2"
+                "-NoProfile",
+                "-ExecutionPolicy", "Bypass",
+                "-File", "${workspaceFolder}/build.ps1"
             ],
             "group": {
                 "kind": "build",
