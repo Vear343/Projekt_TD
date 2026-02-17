@@ -4,19 +4,15 @@
 #include "Vector2D.h"
 #include "Entity.h"
 
-const int TILE_SIZE = 16;
-const int GRID_W = 25;
-const int GRID_H = 19;
-
 class Level {
 public:
-    static constexpr int TILE_SIZE = 16;
+    static constexpr int TILE_SIZE = 32;
     static constexpr int GRID_W = 25;
     static constexpr int GRID_H = 19;
     
     // คำนวณ Offset สำหรับจอ 800x600 ให้ด่านอยู่ตรงกลาง
-    static constexpr int OFFSET_X = (800 - (25 * 16)) / 2; // 200
-    static constexpr int OFFSET_Y = (600 - (19 * 16)) / 2; // 148
+    static constexpr int OFFSET_X = (1280 - (GRID_W * TILE_SIZE)) / 2; // 200
+    static constexpr int OFFSET_Y = (720 - (GRID_H * TILE_SIZE)) / 2; // 148
 
     Level() {
         // กำหนดค่าเริ่มต้นให้ Grid (0 = ว่าง, 1 = ทางเดิน)

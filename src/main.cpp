@@ -4,7 +4,7 @@
 #include"RenderWindow.h"
 #include"Entity.h"
 
-const int WIDTH = 800, HEIGHT = 600;
+const int WIDTH = 1280, HEIGHT = 720;
 
 int main(int argc, char* argv[])
 {
@@ -17,11 +17,13 @@ int main(int argc, char* argv[])
     // Create a window
     RenderWindow window("SDL Window", WIDTH, HEIGHT);
 
+    SDL_Texture* test_tex = window.loadTexture("assets/test_texture.png");
     SDL_Texture* grass_tex = window.loadTexture("assets/grassblock.png");
 
     // Create an entity with the loaded texture
     //               /pos_x/pos_y/ texture /
-    Entity grassblock0(0, 0, grass_tex);
+    Entity test_tile(0, 0, test_tex);
+    Entity grass_tile(0, 0, grass_tex);
 
     Level mylevel;
     SDL_Event event;
@@ -34,7 +36,8 @@ int main(int argc, char* argv[])
             }
             // Clear the window, render the texture, and display it
             window.clear();
-            mylevel.render(window.getRenderer(), grassblock0);
+            mylevel.render(window.getRenderer(), test_tile);
+            window.render(grass_tile);
             window.display();
         }
     }
