@@ -1,6 +1,6 @@
 #include<iostream>
 #include<SDL2/SDL.h>
-
+#include"LEVEL.h"
 #include"RenderWindow.h"
 #include"Entity.h"
 
@@ -23,6 +23,7 @@ int main(int argc, char* argv[])
     //               /pos_x/pos_y/ texture /
     Entity grassblock0(0, 0, grass_tex);
 
+    Level mylevel;
     SDL_Event event;
     // Main loop
     while(true){
@@ -33,7 +34,7 @@ int main(int argc, char* argv[])
             }
             // Clear the window, render the texture, and display it
             window.clear();
-            window.render(grassblock0);
+            mylevel.render(window.getRenderer(), grassblock0);
             window.display();
         }
     }
