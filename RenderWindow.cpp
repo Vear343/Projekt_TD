@@ -1,7 +1,6 @@
 #include<SDL2/SDL.h>
 #include<SDL2/SDL_image.h>
 #include<iostream>
-
 #include "RenderWindow.h"
 
 // Constructor to create a window and renderer
@@ -35,7 +34,20 @@ SDL_Texture* RenderWindow::loadTexture(const char* p_filepPath)
 
 void RenderWindow::cleanUp()
 {
-    SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
 }
 
+void RenderWindow::clear()
+{
+    SDL_RenderClear(renderer);
+}
+
+void RenderWindow::render(SDL_Texture* p_texture)
+{
+    SDL_RenderCopy(renderer, p_texture, NULL, NULL);
+}
+
+void RenderWindow::display()
+{
+    SDL_RenderPresent(renderer);
+}

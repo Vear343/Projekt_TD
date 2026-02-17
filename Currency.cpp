@@ -22,9 +22,3 @@ void Sell_T(int T_Price){ //ฟังค์ชั่นขายป้อม
     cout << "selled : ";
     cout << "Now you have " << Total_Currency << " Baht." << "\n"; //บอกจำนวนเงินที่เหลืออยู่
 }
-int main(){ //test
-    cin >> Total_Currency;
-    Buy_T(5); //ซื้อป้อมปืนครั้งแรกในราคา 5 Baht
-    Sell_T(8); //ขายป้อมปืนในราคา 8 Baht
-    Buy_T(10); 
-}

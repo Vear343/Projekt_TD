@@ -16,6 +16,8 @@ int main(int argc, char* argv[])
     // Create a window
     RenderWindow window("SDL Window", WIDTH, HEIGHT);
 
+    SDL_Texture* texture = window.loadTexture("assets/test_map.jpg");
+
     SDL_Event event;
     // Main loop
     while(true){
@@ -24,6 +26,11 @@ int main(int argc, char* argv[])
             {
                 return false;
             }
+
+            // Clear the window, render the texture, and display it
+            window.clear();
+            window.render(texture);
+            window.display();
         }
     }
     // Clean up and quit SDL
