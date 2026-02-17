@@ -22,11 +22,10 @@ int main(int argc, char* argv[])
     // Main loop
     while(true){
         while (SDL_PollEvent(&event)){
-            if (event.type == SDL_QUIT)
-            {
-                return false;
+            if (event.type == SDL_QUIT) return false;
+            else if (event.type == SDL_KEYDOWN) {
+                if (event.key.keysym.sym == SDLK_ESCAPE) return false;
             }
-
             // Clear the window, render the texture, and display it
             window.clear();
             window.render(texture);
