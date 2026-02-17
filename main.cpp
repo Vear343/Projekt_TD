@@ -2,6 +2,7 @@
 #include<SDL2/SDL.h>
 
 #include"RenderWindow.h"
+#include"Entity.h"
 
 const int WIDTH = 800, HEIGHT = 600;
 
@@ -16,7 +17,11 @@ int main(int argc, char* argv[])
     // Create a window
     RenderWindow window("SDL Window", WIDTH, HEIGHT);
 
-    SDL_Texture* texture = window.loadTexture("assets/test_map.jpg");
+    SDL_Texture* grass_tex = window.loadTexture("assets/grassblock.png");
+
+    // Create an entity with the loaded texture
+    //               /pos_x/pos_y/ texture /
+    Entity grassblock0(0, 0, grass_tex);
 
     SDL_Event event;
     // Main loop
@@ -28,7 +33,7 @@ int main(int argc, char* argv[])
             }
             // Clear the window, render the texture, and display it
             window.clear();
-            window.render(texture);
+            window.render(grassblock0);
             window.display();
         }
     }
