@@ -14,6 +14,8 @@ public:
     void clear();
     void render(Entity& p_entity);
     void display();
+    int getwidth();
+    int getheight();
     SDL_Renderer* getRenderer() {
         return renderer; // return the renderer so it can be used in other classes (like Level)
     }

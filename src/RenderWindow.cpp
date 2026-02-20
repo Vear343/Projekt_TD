@@ -53,26 +53,36 @@ void RenderWindow::render(Entity& p_entity)
     // Define the source rectangle for rendering the texture
     SDL_Rect src;
     // Starting point (top-left corner) of the texture
-    src.x = p_entity.getCurrentFrame().x;
-    src.y = p_entity.getCurrentFrame().y;
+    src.x = p_entity.getCurrentFrame().x/2;
+    src.y = p_entity.getCurrentFrame().y/2;
     // texture pixels width and height
     src.w = p_entity.getCurrentFrame().w; 
     src.h = p_entity.getCurrentFrame().h;
 
     SDL_Rect dst;
     // position on the window
-    dst.x = p_entity.getX() * 4; 
-    dst.y = p_entity.getY() * 4;
+    dst.x = p_entity.getX() - (src.w / 2); // Center the texture on the x-axis
+    dst.y = p_entity.getY() - (src.h / 2); // Center the texture on the y-axis
     // size of the rendered texture on the window
-    dst.w = p_entity.getCurrentFrame().w * 4;
-    dst.h = p_entity.getCurrentFrame().h * 4;
+    dst.w = p_entity.getCurrentFrame().w;
+    dst.h = p_entity.getCurrentFrame().h;
 
     SDL_RenderCopy(renderer, p_entity.getTexture(), &src, &dst);
-
 }
 
 // Present the rendered content to the screen
 void RenderWindow::display()
 {
     SDL_RenderPresent(renderer);
+}
+
+int RenderWindow::getwidth() {
+    int w, h;
+    SDL_GetRendererOutputSize(renderer, &w, &h);
+    return w;
+}
+int RenderWindow::getheight() {
+    int w, h;
+    SDL_GetRendererOutputSize(renderer, &w, &h);
+    return h;
 }

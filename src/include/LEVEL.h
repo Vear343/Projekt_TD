@@ -3,12 +3,13 @@
 #include <SDL2/SDL.h>
 #include "Vector2D.h"
 #include "Entity.h"
+#include "RenderWindow.h"
 
 class Level {
 public:
-    static constexpr int TILE_SIZE = 32;
-    static constexpr int GRID_W = 25;
-    static constexpr int GRID_H = 19;
+    static constexpr int TILE_SIZE = 16;
+    static constexpr int GRID_W = 56;
+    static constexpr int GRID_H = 36;
     
     // คำนวณ Offset สำหรับจอ 800x600 ให้ด่านอยู่ตรงกลาง
     static constexpr int OFFSET_X = (1280 - (GRID_W * TILE_SIZE)) / 2; // 200
@@ -42,7 +43,7 @@ public:
     }
 
     // ฟังก์ชันวาด Grid ทั้งหมด (พื้นหลัง) โดยใช้ Texture ที่ส่งเข้ามา
-    void render(SDL_Renderer* renderer, Entity& p_entity) {
+    void render_level(SDL_Renderer* renderer, Entity& p_entity) {
         for (int y = 0; y < GRID_H; y++) {
             for (int x = 0; x < GRID_W; x++) {
                 SDL_Rect dest = {
