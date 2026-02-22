@@ -4,8 +4,8 @@
 
 class Enemy : public Entity {
 public:
-    // สร้าง Enemy โดยรับพิกัดเริ่มต้น, speed, texture, และเส้นทางที่ต้องการเดิน
-    Enemy(float p_x, float p_y, float p_speed, SDL_Texture* p_texture,const std::vector<Vector2D>& path);
+    // สร้าง Enemy โดยรับพิกัดเริ่มต้น, width, height, speed, texture, และเส้นทางที่ต้องการเดิน
+    Enemy(float p_x, float p_y, float p_width, float p_height, float p_speed, SDL_Texture* p_texture,const std::vector<Vector2D>& path);
 
     void follow_path(float deltaTime);
 private:

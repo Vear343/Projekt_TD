@@ -43,7 +43,7 @@ public:
     }
 
     // ฟังก์ชันวาด Grid ทั้งหมด (พื้นหลัง) โดยใช้ Texture ที่ส่งเข้ามา
-    void render_level(SDL_Renderer* renderer, Entity& p_entity) {
+    void render_level(SDL_Renderer* renderer, SDL_Texture* texture) {
         for (int y = 0; y < GRID_H; y++) {
             for (int x = 0; x < GRID_W; x++) {
                 SDL_Rect dest = {
@@ -54,7 +54,7 @@ public:
             };
 
             // วาดภาพลงไปในตำแหน่งที่คำนวณ Offset ไว้แล้ว
-            SDL_RenderCopy(renderer, p_entity.getTexture(), NULL, &dest);
+            SDL_RenderCopy(renderer, texture, NULL, &dest);
             }
         }
     }

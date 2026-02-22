@@ -1,14 +1,15 @@
 #include<cmath>
+#include<iostream>
 
 #include "Enemy.h"
 
-Enemy::Enemy(float p_x, float p_y, float p_speed, SDL_Texture* p_texture,const std::vector<Vector2D>& p_path)
-    :Entity(p_x, p_y, p_texture), 
+Enemy::Enemy(float p_x, float p_y, float p_width, float p_height, float p_speed, SDL_Texture* p_texture,const std::vector<Vector2D>& p_path)
+    :Entity(p_x, p_y, p_width, p_height, p_texture), 
     path(p_path), 
     speed(p_speed)
 {
-    currentFrame.w = 32;
-    currentFrame.h = 32;
+    currentFrame.w = width;
+    currentFrame.h = height;
 }
 
 void Enemy::follow_path(float deltaTime) {
@@ -30,7 +31,7 @@ void Enemy::follow_path(float deltaTime) {
             y += direction.y * speed * deltaTime;
 
             // Check if we have reached the target (within a small threshold)
-            if (distance < 5.0f) {
+            if (distance < 2.0f) {
                 currentPathIndex++; // Move to the next point in the path
             }
         }

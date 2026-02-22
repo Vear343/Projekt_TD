@@ -6,15 +6,17 @@
 #include "RenderWindow.h"
 
 #pragma region Entity
-Entity::Entity(float p_x, float p_y, SDL_Texture* p_texture)
+Entity::Entity(float p_x, float p_y, float p_width, float p_height, SDL_Texture* p_texture)
     :x(p_x),
      y(p_y), 
+     width(p_width),
+     height(p_height),
      texture(p_texture)
 {
-    currentFrame.w = 32;
-    currentFrame.h = 32;
-    currentFrame.x = 0;
-    currentFrame.y = 0;
+    currentFrame.w = width;
+    currentFrame.h = height;
+    currentFrame.x = p_x;
+    currentFrame.y = p_y;
 }
 
 float Entity::getX()
@@ -25,6 +27,16 @@ float Entity::getX()
 float Entity::getY()
 {
     return y;
+}
+
+float Entity::getWidth()
+{
+    return width;
+}
+
+float Entity::getHeight()
+{
+    return height;
 }
 
 SDL_Texture* Entity::getTexture()

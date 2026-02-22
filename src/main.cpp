@@ -22,6 +22,7 @@ int main(int argc, char* argv[])
     // Create a window
     RenderWindow window("SDL Window", WIDTH, HEIGHT);
     
+    // load texture
     SDL_Texture* test_tex = window.loadTexture("assets/test_texture.png");
     SDL_Texture* enemy_tex = window.loadTexture("assets/test_enemy.png");
     
@@ -36,13 +37,16 @@ int main(int argc, char* argv[])
         mylevel.gridToWorld(10, 0),
         mylevel.gridToWorld(10, 10),
         mylevel.gridToWorld(20, 10),
-        mylevel.gridToWorld(55, 35),
+        mylevel.gridToWorld(20, 20),
+        mylevel.gridToWorld(55, 20),
+        mylevel.gridToWorld(0, 20),
+        mylevel.gridToWorld(0,0),
     };
 
-    // สรร้าง Entity >> Entity entity_name(pos_x, pos_y, texture);
-    Entity test_tile(0, 0, test_tex);
-    // สรร้าง Enemy >> Enemy enemy_name(pos_x, pos_y, speed, texture, path);
-    Enemy enemy(0, 100, 100.0f, enemy_tex, path);
+    // // สรร้าง Entity >> Entity entity_name(pos_x, pos_y, width, height, texture);
+    // Entity test_tile(0, 0, 16, 16, test_tex);
+    // สรร้าง Enemy >> Enemy enemy_name(pos_x, pos_y, width, height, speed, texture, path);
+    Enemy enemy(200, 200, 32, 32, 300.0f, enemy_tex, path);
     
     // Main loop
     while(true){
@@ -74,10 +78,9 @@ int main(int argc, char* argv[])
         enemy.follow_path(deltaTime); // Update enemy position based on its path and speed
 
         window.clear();
-        mylevel.render_level(window.getRenderer(), test_tile);
+        mylevel.render_level(window.getRenderer(), test_tex);
         window.render(enemy);
         window.display();
-
     }
     // Clean up and quit SDL
     window.cleanUp();

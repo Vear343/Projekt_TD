@@ -7,11 +7,12 @@
 
 // Constructor to create a window and renderer
 RenderWindow::RenderWindow(const char* p_title, int p_w, int p_h)
-    :window(NULL), renderer(NULL)
+    :window(NULL),
+     renderer(NULL)
 {
     window = SDL_CreateWindow(p_title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, p_w, p_h, SDL_WINDOW_SHOWN);
 
-    // Check if the window was created successfully
+    // Check if the window was created successfully 
     if (window == NULL)
     {
         std::cout << "Window could not be created! SDL_Error: " << SDL_GetError() << std::endl;
@@ -52,9 +53,9 @@ void RenderWindow::render(Entity& p_entity)
 {
     // Define the source rectangle for rendering the texture
     SDL_Rect src;
-    // Starting point (top-left corner) of the texture
-    src.x = p_entity.getCurrentFrame().x/2;
-    src.y = p_entity.getCurrentFrame().y/2;
+    // Start at the top-left corner of the texture
+    src.x = 0;
+    src.y = 0;
     // texture pixels width and height
     src.w = p_entity.getCurrentFrame().w; 
     src.h = p_entity.getCurrentFrame().h;
