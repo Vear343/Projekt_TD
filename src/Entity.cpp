@@ -3,7 +3,6 @@
 #include <iostream>
 
 #include "Entity.h"
-#include "RenderWindow.h"
 
 #pragma region Entity
 Entity::Entity(float p_x, float p_y, float p_width, float p_height, SDL_Texture* p_texture)
