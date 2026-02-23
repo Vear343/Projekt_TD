@@ -45,6 +45,7 @@ void RenderWindow::cleanUp()
 // Clear the renderer
 void RenderWindow::clear()
 {
+    SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255); // Background Color
     SDL_RenderClear(renderer);
 }
 

@@ -12,7 +12,7 @@ Enemy::Enemy(float p_x, float p_y, float p_width, float p_height, float p_speed,
     currentFrame.h = height;
 }
 
-void Enemy::follow_path(float deltaTime) {
+void Enemy::uqdate(float deltaTime) {
     if (currentPathIndex < path.size()) {
         Vector2D target = path[currentPathIndex];
         Vector2D currentPos(x, y);

@@ -75,10 +75,10 @@ int main(int argc, char* argv[])
             }
         }
 
-        enemy.follow_path(deltaTime); // Update enemy position based on its path and speed
+        enemy.uqdate(deltaTime); // Update enemy position based on its path and speed
 
         window.clear();
-        mylevel.render_level(window.getRenderer(), test_tex);
+        mylevel.render(window.getRenderer());
         window.render(enemy);
         window.display();
     }

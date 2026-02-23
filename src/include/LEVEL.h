@@ -2,8 +2,6 @@
 #include <vector>
 #include <SDL2/SDL.h>
 #include "Vector2D.h"
-#include "Entity.h"
-#include "RenderWindow.h"
 
 class Level {
 public:
@@ -14,6 +12,12 @@ public:
     // คำนวณ Offset สำหรับจอ 800x600 ให้ด่านอยู่ตรงกลาง
     static constexpr int OFFSET_X = (1280 - (GRID_W * TILE_SIZE)) / 2; // 200
     static constexpr int OFFSET_Y = (720 - (GRID_H * TILE_SIZE)) / 2; // 148
+
+    enum TileType{
+        EMPTY = 0,
+        PATH = 1,
+        WALL = 2,
+    };
 
     Level() {
         // กำหนดค่าเริ่มต้นให้ Grid (0 = ว่าง, 1 = ทางเดิน)
@@ -42,8 +46,8 @@ public:
         return (gx >= 0 && gx < GRID_W && gy >= 0 && gy < GRID_H);
     }
 
-    // ฟังก์ชันวาด Grid ทั้งหมด (พื้นหลัง) โดยใช้ Texture ที่ส่งเข้ามา
-    void render_level(SDL_Renderer* renderer, SDL_Texture* texture) {
+    // ฟังก์ชันวาด Grid ทั้งหมด (พื้นหลัง)
+    void render(SDL_Renderer* renderer) {
         for (int y = 0; y < GRID_H; y++) {
             for (int x = 0; x < GRID_W; x++) {
                 SDL_Rect dest = {
@@ -52,9 +56,29 @@ public:
                     TILE_SIZE,
                     TILE_SIZE
             };
+            switch ( (mapData[y][x])){
+            case 0:
+                SDL_SetRenderDrawColor(renderer, 50, 160, 50, 255);
+                break;    
+            
+            case 1:
+                SDL_SetRenderDrawColor(renderer, 150, 100, 50, 255);
+                break;
+                
+            case 2:
+                SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
+                break;
+
+            default:
+                SDL_SetRenderDrawColor(renderer, 255, 0, 255, 255);
+                break;
+            }
 
             // วาดภาพลงไปในตำแหน่งที่คำนวณ Offset ไว้แล้ว
-            SDL_RenderCopy(renderer, texture, NULL, &dest);
+            SDL_RenderFillRect(renderer, &dest);
+            // สร้าง Grid outline
+            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+            SDL_RenderDrawRect(renderer, &dest);
             }
         }
     }

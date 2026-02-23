@@ -7,7 +7,7 @@ public:
     // สร้าง Enemy โดยรับพิกัดเริ่มต้น, width, height, speed, texture, และเส้นทางที่ต้องการเดิน
     Enemy(float p_x, float p_y, float p_width, float p_height, float p_speed, SDL_Texture* p_texture,const std::vector<Vector2D>& path);
 
-    void follow_path(float deltaTime);
+    void uqdate(float deltaTime);
 private:
     const std::vector<Vector2D>& path;
     int currentPathIndex = 0;
