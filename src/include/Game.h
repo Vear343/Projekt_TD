@@ -6,6 +6,8 @@
 #include "RenderWindow.h"
 #include "Level.h"
 #include "Enemy.h"
+#include "Tower.h"
+
 
 class Game
 {
@@ -21,14 +23,14 @@ private:
     void handleEvents();
     void update(float deltatime);
     void render();
-
+    
     bool running;
 
     RenderWindow* window;
     Level level;
 
     std::vector<Enemy> enemies;
-
+    std::vector<std::unique_ptr<Tower>> towers;
     SDL_Event event;
 
     Uint64 lastTime;

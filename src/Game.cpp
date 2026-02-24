@@ -1,6 +1,6 @@
 #include <algorithm>
 #include <iostream>
-
+#include <memory>
 #include "Game.h"
 
 // Constructor
@@ -90,6 +90,9 @@ void Game::update(float deltatime)
     for (auto& enemy : enemies)
     enemy.update(deltatime);
 
+    for (auto& tower : towers)      
+        tower->update(deltatime, enemies);
+
     // Remove enemies
     enemies.erase(
         std::remove_if(enemies.begin(), enemies.end(),
@@ -109,6 +112,9 @@ void Game::render()
     
     for (auto& enemy : enemies)
     window->render(enemy);
+
+    for (auto& tower : towers)
+    tower->render(window->getRenderer());
     
     window->display();
 }
