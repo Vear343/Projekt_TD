@@ -83,38 +83,42 @@ void Game::handleEvents()
     }
     
 // Update all game objects
-void Game::update(float deltatime)
+void Game::update(float deltaTime)
 {
-    spawnTimer += deltatime;
+    spawnTimer += deltaTime;
 
+    // Update enemies
     for (auto& enemy : enemies)
-    enemy.update(deltatime);
+        enemy->update(deltaTime);   // <-- pointer now
 
-    if (spawnTimer >= spawnDelay && enemiesToSpawn > 0){
-        enemies.emplace_back(
+    // Spawn enemies
+    if (spawnTimer >= spawnDelay && enemiesToSpawn > 0)
+    {
+        enemies.push_back(std::make_unique<Enemy>(
             path[0].x,
             path[0].y,
             enemyTex,
             path
-        );
+        ));
 
         spawnTimer = 0.0f;
         enemiesToSpawn--;
     }
-    for (auto& tower : towers)      
-        tower->update(deltatime, enemies);
 
-    // Remove enemies
+    // Update towers
+    for (auto& tower : towers)
+        tower->update(deltaTime, enemies);
+
+    // Remove finished enemies
     enemies.erase(
-        // ใช้ std::remove_if เพื่อกรองเอาเฉพาะ Enemy ที่ยังไม่จบเส้นทางออกมา
         std::remove_if(enemies.begin(), enemies.end(),
-            [](Enemy& e){
-                return e.hasFinished();
+            [](const std::unique_ptr<Enemy>& e)
+            {
+                return e->hasFinished();
             }),
         enemies.end()
     );
 }
-
 // Render everything to the screen
 void Game::render()
 {
@@ -124,10 +128,10 @@ void Game::render()
     
     // Render all enemies
     for (auto& enemy : enemies)
-    window->render(enemy);
+    window->render(*enemy);
 
-    for (auto& tower : towers)
-    tower->render(window->getRenderer());
+    // for (auto& tower : towers)
+    // tower->render(window->getRenderer());
     
     window->display();
 }

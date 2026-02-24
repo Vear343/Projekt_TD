@@ -5,7 +5,7 @@
 // BASE
 ////////////////////////////////////////////////////
 
-Tower::Tower(Vector2 pos)
+Tower::Tower(Vector2D pos)
     : position(pos),
       damage(0),
       range(0),
@@ -14,17 +14,15 @@ Tower::Tower(Vector2 pos)
 {
 }
 
-Tower::~Tower() = default;
-
 ////////////////////////////////////////////////////
 // FIRE TOWER
 ////////////////////////////////////////////////////
 
-FireTower::FireTower(Vector2 pos)
+FireTower::FireTower(Vector2D pos)
     : Tower(pos)
 {
-    damage = 20;
-    range = 150;
+    damage = 20.0f;
+    range = 150.0f;
     attackSpeed = 1.0f;
 }
 
@@ -35,10 +33,12 @@ void FireTower::update(float dt,
 
     for (auto& enemy : enemies)
     {
-        if (!enemy->alive) continue;
+        if (!enemy->isAlive()) continue;
 
-        float dx = position.x - enemy->position.x;
-        float dy = position.y - enemy->position.y;
+        Vector2D enemyPos = enemy->getPosition();
+
+        float dx = position.x - enemyPos.x;
+        float dy = position.y - enemyPos.y;
         float dist = std::sqrt(dx * dx + dy * dy);
 
         if (dist <= range && cooldown <= 0)
@@ -50,15 +50,22 @@ void FireTower::update(float dt,
     }
 }
 
+void FireTower::render(SDL_Renderer* renderer)
+{
+    SDL_Rect rect = { (int)position.x - 10, (int)position.y - 10, 20, 20 };
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    SDL_RenderFillRect(renderer, &rect);
+}
+
 ////////////////////////////////////////////////////
 // ICE TOWER
 ////////////////////////////////////////////////////
 
-IceTower::IceTower(Vector2 pos)
+IceTower::IceTower(Vector2D pos)
     : Tower(pos)
 {
-    damage = 10;
-    range = 150;
+    damage = 10.0f;
+    range = 150.0f;
     attackSpeed = 2.0f;
 }
 
@@ -69,10 +76,12 @@ void IceTower::update(float dt,
 
     for (auto& enemy : enemies)
     {
-        if (!enemy->alive) continue;
+        if (!enemy->isAlive()) continue;
 
-        float dx = position.x - enemy->position.x;
-        float dy = position.y - enemy->position.y;
+        Vector2D enemyPos = enemy->getPosition();
+
+        float dx = position.x - enemyPos.x;
+        float dy = position.y - enemyPos.y;
         float dist = std::sqrt(dx * dx + dy * dy);
 
         if (dist <= range && cooldown <= 0)
@@ -82,4 +91,11 @@ void IceTower::update(float dt,
             break;
         }
     }
+}
+
+void IceTower::render(SDL_Renderer* renderer)
+{
+    SDL_Rect rect = { (int)position.x - 10, (int)position.y - 10, 20, 20 };
+    SDL_SetRenderDrawColor(renderer, 0, 150, 255, 255);
+    SDL_RenderFillRect(renderer, &rect);
 }

@@ -28,11 +28,11 @@ private:
     RenderWindow* window;
     Level level;
 
-    std::vector<Enemy> enemies;
+    std::vector<std::unique_ptr<Enemy>> enemies;
 
     // ตัวแปรสำหรับควบคุมการ spawn ศัตรู
     float spawnTimer = 0.0f;
-    float spawnDelay = 5.0f;
+    float spawnDelay = 1.0f;
     int  enemiesToSpawn = 10; // จำนวนศัตรูที่จะ spawn
 
     SDL_Texture* enemyTex;

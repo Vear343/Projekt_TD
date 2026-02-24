@@ -1,24 +1,27 @@
 #pragma once
 #include <vector>
 #include <memory>
-#include "Vector2.h"
+#include <SDL2/SDL.h>
+#include "Vector2D.h"
 #include "Enemy.h"
 
 class Tower
 {
 protected:
-    Vector2 position;
+    Vector2D position;
     float damage;
     float range;
     float attackSpeed;
     float cooldown;
 
 public:
-    Tower(Vector2 pos);
-    virtual ~Tower();
+    Tower(Vector2D pos);
+    virtual ~Tower() = default;
 
     virtual void update(float dt,
-    std::vector<Enemy>& enemies) = 0;
+        std::vector<std::unique_ptr<Enemy>>& enemies) = 0;
+
+    virtual void render(SDL_Renderer* renderer) = 0;
 };
 
 ////////////////////////////////////////////////////
@@ -28,10 +31,12 @@ public:
 class FireTower : public Tower
 {
 public:
-    FireTower(Vector2 pos);
+    FireTower(Vector2D pos);
 
     void update(float dt,
         std::vector<std::unique_ptr<Enemy>>& enemies) override;
+
+    void render(SDL_Renderer* renderer) override;
 };
 
 ////////////////////////////////////////////////////
@@ -41,8 +46,10 @@ public:
 class IceTower : public Tower
 {
 public:
-    IceTower(Vector2 pos);
+    IceTower(Vector2D pos);
 
     void update(float dt,
         std::vector<std::unique_ptr<Enemy>>& enemies) override;
+
+    void render(SDL_Renderer* renderer) override;
 };

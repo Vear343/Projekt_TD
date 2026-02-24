@@ -38,6 +38,10 @@ void Enemy::update(float deltaTime) {
     x += direction.x * speed * deltaTime;
     y += direction.y * speed * deltaTime;
 
-    std::cout << "currentPathIndex = " << currentPathIndex << std::endl;
-    std::cout << "Position {" << x << ", " << y << " }\n\n";
+    // std::cout << "currentPathIndex = " << currentPathIndex << std::endl;
+    // std::cout << "Position {" << x << ", " << y << " }\n\n";
+}
+
+void Enemy::takeDamage(float dmg){
+    Hp -= dmg;
 }
