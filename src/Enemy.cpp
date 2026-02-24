@@ -3,13 +3,10 @@
 
 #include "Enemy.h"
 
-Enemy::Enemy(float p_x, float p_y, float p_width, float p_height, float p_speed, SDL_Texture* p_texture,const std::vector<Vector2D>& p_path)
-    :Entity(p_x, p_y, p_width, p_height, p_texture), 
-    path(p_path), 
-    speed(p_speed)
+Enemy::Enemy(float p_x, float p_y, SDL_Texture* p_texture,const std::vector<Vector2D>& p_path)
+    :Entity(p_x, p_y, width, height, p_texture), 
+     path(p_path)
 {
-    currentFrame.w = width;
-    currentFrame.h = height;
 }
 
 void Enemy::update(float deltaTime) {
@@ -34,6 +31,9 @@ void Enemy::update(float deltaTime) {
     direction.x /= distance;
     direction.y /= distance;
 
+    // Move collider box
+    collider.x = static_cast<int>(x);
+    collider.y = static_cast<int>(y);
     // Move towards the target
     x += direction.x * speed * deltaTime;
     y += direction.y * speed * deltaTime;

@@ -35,18 +35,16 @@ bool Game::init()
 
     window = new RenderWindow("Tower Defense", 1280, 720);
 
-    SDL_Texture* enemyTex = window->loadTexture("assets/test_enemy.png");
+    enemyTex = window->loadTexture("assets/test_enemy.png");
 
     // Create path
-    std::vector<Vector2D> path = {
+    path = {
         level.gridToWorld(0,0),
         level.gridToWorld(10,0),
         level.gridToWorld(10,10),
         level.gridToWorld(20,10),
         level.gridToWorld(20,20),
     };
-    // Create an enemy and add it to the enemies vector
-    enemies.emplace_back(200, 200, 32, 32, 300.0f, enemyTex, path);
 
     lastTime = SDL_GetPerformanceCounter();
     running = true;
@@ -87,11 +85,26 @@ void Game::handleEvents()
 // Update all game objects
 void Game::update(float deltatime)
 {
+    spawnTimer += deltatime;
+
     for (auto& enemy : enemies)
     enemy.update(deltatime);
 
+    if (spawnTimer >= spawnDelay && enemiesToSpawn > 0){
+        enemies.emplace_back(
+            path[0].x,
+            path[0].y,
+            enemyTex,
+            path
+        );
+
+        spawnTimer = 0.0f;
+        enemiesToSpawn--;
+    }
+
     // Remove enemies
     enemies.erase(
+        // ใช้ std::remove_if เพื่อกรองเอาเฉพาะ Enemy ที่ยังไม่จบเส้นทางออกมา
         std::remove_if(enemies.begin(), enemies.end(),
             [](Enemy& e){
                 return e.hasFinished();
@@ -107,6 +120,7 @@ void Game::render()
     
     level.render(window->getRenderer());
     
+    // Render all enemies
     for (auto& enemy : enemies)
     window->render(enemy);
     

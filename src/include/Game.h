@@ -15,19 +15,26 @@ public:
 
     bool init();
     void run();      // main loop
-    void clean();
-
-private:
     void handleEvents();
     void update(float deltatime);
     void render();
-
+    void clean();
+    
+private:
     bool running;
 
     RenderWindow* window;
     Level level;
 
     std::vector<Enemy> enemies;
+
+    // ตัวแปรสำหรับควบคุมการ spawn ศัตรู
+    float spawnTimer = 0.0f;
+    float spawnDelay = 5.0f;
+    int  enemiesToSpawn = 10; // จำนวนศัตรูที่จะ spawn
+
+    SDL_Texture* enemyTex;
+    std::vector<Vector2D> path;
 
     SDL_Event event;
 

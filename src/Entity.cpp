@@ -4,7 +4,6 @@
 
 #include "Entity.h"
 
-#pragma region Entity
 Entity::Entity(float p_x, float p_y, float p_width, float p_height, SDL_Texture* p_texture)
     :x(p_x),
      y(p_y), 
@@ -16,34 +15,12 @@ Entity::Entity(float p_x, float p_y, float p_width, float p_height, SDL_Texture*
     currentFrame.h = height;
     currentFrame.x = p_x;
     currentFrame.y = p_y;
+
+    collider.w = width;
+    collider.h = height;
 }
 
-float Entity::getX()
-{
-    return x;
-}
-
-float Entity::getY()
-{
-    return y;
-}
-
-float Entity::getWidth()
-{
-    return width;
-}
-
-float Entity::getHeight()
-{
-    return height;
-}
-
-SDL_Texture* Entity::getTexture()
-{
-    return texture;
-}
-
-SDL_Rect Entity::getCurrentFrame()
-{
-    return currentFrame;
+void Entity::update(float deltatime){
+    collider.x = static_cast<int>(x);
+    collider.y = static_cast<int>(y);
 }
