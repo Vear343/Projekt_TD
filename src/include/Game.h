@@ -6,6 +6,8 @@
 #include "RenderWindow.h"
 #include "Level.h"
 #include "Enemy.h"
+#include "Tower.h"
+
 
 class Game
 {
@@ -36,6 +38,7 @@ private:
     SDL_Texture* enemyTex;
     std::vector<Vector2D> path;
 
+    std::vector<std::unique_ptr<Tower>> towers;
     SDL_Event event;
 
     Uint64 lastTime;
