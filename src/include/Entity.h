@@ -9,8 +9,8 @@ class Entity
 {
 public:
     Entity(float p_x = 0, float p_y = 0, float p_width = 32, float p_height = 32, SDL_Texture* p_texture = nullptr);
-    float getX() {return y;};
-    float getY() {return x;};
+    float getX() {return x;};
+    float getY() {return y;};
     float getWidth() {return width;};
     float getHeight() {return height;};
     void update(float deltatime);

@@ -49,6 +49,14 @@ void RenderWindow::clear()
     SDL_RenderClear(renderer);
 }
 
+// draw a full-screen texture (e.g. sky image)
+void RenderWindow::drawTextureFull(SDL_Texture* tex)
+{
+    if (!tex) return;
+    SDL_Rect dest = { 0, 0, getwidth(), getheight() };
+    SDL_RenderCopy(renderer, tex, NULL, &dest);
+}
+
 // Render a texture to the window
 void RenderWindow::render(Entity& p_entity)
 {

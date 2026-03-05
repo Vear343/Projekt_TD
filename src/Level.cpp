@@ -39,16 +39,20 @@ void Level::render(SDL_Renderer* renderer) {
                     TILE_SIZE
             };
             switch ( (mapData[y][x])){
-            case 0:
+            case 0: // empty
                 SDL_SetRenderDrawColor(renderer, 50, 160, 50, 255);
                 break;    
             
-            case 1:
+            case 1: // path
                 SDL_SetRenderDrawColor(renderer, 150, 100, 50, 255);
                 break;
                 
-            case 2:
+            case 2: // wall
                 SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
+                break;
+
+            case 3:  // tower placed
+                SDL_SetRenderDrawColor(renderer, 0, 0, 200, 255);
                 break;
 
             default:
@@ -59,7 +63,7 @@ void Level::render(SDL_Renderer* renderer) {
             // วาดภาพลงไปในตำแหน่งที่คำนวณ Offset ไว้แล้ว
             SDL_RenderFillRect(renderer, &dest);
             // สร้าง Grid outline
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+            SDL_SetRenderDrawColor(renderer, 50, 205, 50, 255);
             SDL_RenderDrawRect(renderer, &dest);
             }
         }
@@ -76,3 +80,11 @@ void Level::renderEntity(SDL_Renderer* renderer, SDL_Texture* tex, Vector2D pos,
         double degrees = angle * (180.0 / M_PI);
         SDL_RenderCopyEx(renderer, tex, NULL, &dest, degrees, NULL, SDL_FLIP_NONE);
     }
+
+bool Level::isEmpty(int gx,int gy) const {
+    return mapData[gy][gx] == EMPTY;
+}
+
+void Level::setTile(int gx,int gy, TileType type) {
+    mapData[gy][gx] = type;
+}

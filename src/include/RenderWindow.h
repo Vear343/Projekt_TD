@@ -16,6 +16,10 @@ public:
     void display();
     int getwidth();
     int getheight();
+    
+    // draw a texture stretched to fill the entire window
+    void drawTextureFull(SDL_Texture* tex);
+
     SDL_Renderer* getRenderer() {
         return renderer; // return the renderer so it can be used in other classes (like Level)
     }

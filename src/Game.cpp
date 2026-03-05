@@ -9,6 +9,8 @@ Game::Game()
 {
     running = false;
     window = nullptr;
+    enemyTex = nullptr;
+    bgTex = nullptr;
 }
 
 // Destructor
@@ -36,6 +38,8 @@ bool Game::init()
     window = new RenderWindow("Tower Defense", 1280, 720);
 
     enemyTex = window->loadTexture("assets/test_enemy.png");
+    // try loading a sky background (optional)
+    bgTex = window->loadTexture("assets/Sky_01.png");
 
     // Create path
     path = {
@@ -74,11 +78,30 @@ void Game::handleEvents()
     while (SDL_PollEvent(&event))
     {
         if (event.type == SDL_QUIT)
-        running = false;
+            running = false;
         
         if (event.type == SDL_KEYDOWN &&
             event.key.keysym.sym == SDLK_ESCAPE)
             running = false;
+
+        // left mouse button places a tower
+        if (event.type == SDL_MOUSEBUTTONDOWN &&
+            event.button.button == SDL_BUTTON_LEFT)
+        {
+            Vector2D mpos((float)event.button.x,
+                          (float)event.button.y);
+            int gx, gy;
+            if (level.worldToGrid(mpos, gx, gy))
+            {
+                // only on empty ground
+                if (level.isEmpty(gx, gy))
+                {
+                    Vector2D world = level.gridToWorld(gx, gy);
+                    towers.push_back(std::make_unique<FireTower>(world));
+                    level.setTile(gx, gy, Level::TOWER);
+                }
+            }
+        }
         }
     }
     
@@ -124,15 +147,21 @@ void Game::render()
 {
     window->clear();
     
+    // draw sky image if we have one
+    if (bgTex) {
+        window->drawTextureFull(bgTex);
+    }
+
     level.render(window->getRenderer());
     
     // Render all enemies
     for (auto& enemy : enemies)
-    window->render(*enemy);
+        window->render(*enemy);
 
-    // for (auto& tower : towers)
-    // tower->render(window->getRenderer());
-    
+    // draw towers
+    for (auto& tower : towers)
+        tower->render(window->getRenderer());
+
     window->display();
 }
 # pragma endregion
@@ -146,6 +175,16 @@ void Game::clean()
         window = nullptr;
     }
 
+    if (enemyTex) {
+        SDL_DestroyTexture(enemyTex);
+        enemyTex = nullptr;
+    }
+    if (bgTex) {
+        SDL_DestroyTexture(bgTex);
+        bgTex = nullptr;
+    }
+
     IMG_Quit();
     SDL_Quit();
 }
+

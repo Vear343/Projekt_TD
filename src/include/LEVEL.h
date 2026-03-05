@@ -20,12 +20,20 @@ public:
     bool worldToGrid(Vector2D worldPos, int& gx, int& gy);
     void render(SDL_Renderer* renderer);
     void renderEntity(SDL_Renderer* renderer, SDL_Texture* tex, Vector2D pos, float angle);
-    
-private:
-    int mapData[GRID_H][GRID_W];
+
+    // tile types that the level stores; public so game logic can inspect/modify
     enum TileType{
         EMPTY = 0,
         PATH = 1,
         WALL = 2,
+        TOWER = 3,      // occupied by a placed tower
+        CORE = 4       // the end point enemies are trying to reach
     };
+
+    // helpers for game logic
+    bool isEmpty(int gx,int gy) const;
+    void setTile(int gx,int gy, TileType type);
+
+private:
+    int mapData[GRID_H][GRID_W];
 };

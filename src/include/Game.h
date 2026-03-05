@@ -36,6 +36,7 @@ private:
     int  enemiesToSpawn = 10; // จำนวนศัตรูที่จะ spawn
 
     SDL_Texture* enemyTex;
+    SDL_Texture* bgTex;             // sky/background image
     std::vector<Vector2D> path;
 
     std::vector<std::unique_ptr<Tower>> towers;
