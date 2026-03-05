@@ -23,6 +23,7 @@ Game::~Game()
 // Initialize everything needed for the game
 bool Game::init()
 {
+    // SDL initialization FIRST
     if (SDL_Init(SDL_INIT_VIDEO) != 0)
     {
         std::cout << "SDL Init Failed\n";
@@ -35,19 +36,27 @@ bool Game::init()
         return false;
     }
 
+    // Create window
     window = new RenderWindow("Tower Defense", 1280, 720);
+    
+    if (window == nullptr) {
+        std::cout << "Window creation failed\n";
+        return false;
+    }
 
+    // Load textures AFTER window is created
     enemyTex = window->loadTexture("assets/test_enemy.png");
-    // try loading a sky background (optional)
     bgTex = window->loadTexture("assets/Sky_01.png");
+    fireTowerTexture = window->loadTexture("assets/fire_tower.png");
+    iceTowerTexture = window->loadTexture("assets/ice_tower.png");
 
     // Create path
     path = {
-        level.gridToWorld(0,0),
-        level.gridToWorld(10,0),
-        level.gridToWorld(10,10),
-        level.gridToWorld(20,10),
-        level.gridToWorld(20,20),
+        level.gridToWorld(0, 0),
+        level.gridToWorld(10, 0),
+        level.gridToWorld(10, 10),
+        level.gridToWorld(20, 10),
+        level.gridToWorld(20, 20),
     };
 
     lastTime = SDL_GetPerformanceCounter();
@@ -85,26 +94,25 @@ void Game::handleEvents()
             running = false;
 
         // left mouse button places a tower
-        if (event.type == SDL_MOUSEBUTTONDOWN &&
-            event.button.button == SDL_BUTTON_LEFT)
+        if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT)
+        {
+            Vector2D mpos((float)event.button.x,
+                        (float)event.button.y);
+            int gx, gy;
+            if (level.worldToGrid(mpos, gx, gy))
             {
-                Vector2D mpos((float)event.button.x,
-                            (float)event.button.y);
-                int gx, gy;
-                if (level.worldToGrid(mpos, gx, gy))
+                // only on empty ground
+                if (level.isEmpty(gx, gy))
                 {
-                    // only on empty ground
-                    if (level.isEmpty(gx, gy))
-                    {
-                        Vector2D world = level.gridToWorld(gx, gy);
-                        towers.push_back(std::make_unique<IceTower>(world));
-                        level.setTile(gx, gy, Level::TOWER);
-                    }
+                    Vector2D world = level.gridToWorld(gx, gy);
+                    towers.push_back(std::make_unique<IceTower>(world));
+                    level.setTile(gx, gy, Level::TOWER);
                 }
             }
         }
     }
-    
+}
+
 // Update all game objects
 void Game::update(float deltaTime)
 {
@@ -129,15 +137,13 @@ void Game::update(float deltaTime)
     }
 
     // Update towers
-    for (auto& tower : towers)
-        tower->update(deltaTime, enemies);
+    for (auto& tower : towers) tower->updateTower(deltaTime, enemies);
 
     // Remove finished enemies
-    enemies.erase(
-        std::remove_if(enemies.begin(), enemies.end(),
+    enemies.erase(std::remove_if(enemies.begin(), enemies.end(),
             [](const std::unique_ptr<Enemy>& e)
             {
-                return e->hasFinished();
+                return !e->isAlive() || e->hasFinished();
             }),
         enemies.end()
     );

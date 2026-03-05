@@ -28,8 +28,7 @@ private:
     RenderWindow* window;
     Level level;
 
-    std::vector<std::unique_ptr<Enemy>> enemies;
-
+    
     // ตัวแปรสำหรับควบคุมการ spawn ศัตรู
     float spawnTimer = 0.0f;
     float spawnDelay = 1.0f;
@@ -37,10 +36,14 @@ private:
 
     SDL_Texture* enemyTex;
     SDL_Texture* bgTex;             // sky/background image
+    SDL_Texture* fireTowerTexture = nullptr;
+    SDL_Texture* iceTowerTexture = nullptr;
     std::vector<Vector2D> path;
-
     std::vector<std::unique_ptr<Tower>> towers;
+    std::vector<std::unique_ptr<Enemy>> enemies;
+
+    
     SDL_Event event;
 
     Uint64 lastTime;
-};
+}; 

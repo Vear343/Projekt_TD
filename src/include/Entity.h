@@ -1,25 +1,38 @@
 #pragma once
-#include<SDL2/SDL.h>
-#include<SDL2/SDL_image.h>
-#include<vector>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include "Vector2D.h"
 
-#include"Vector2D.h"
-
-class Entity
-{
+class Entity {
 public:
-    Entity(float p_x = 0, float p_y = 0, float p_width = 32, float p_height = 32, SDL_Texture* p_texture = nullptr);
-    float getX() {return x;};
-    float getY() {return y;};
-    float getWidth() {return width;};
-    float getHeight() {return height;};
-    void update(float deltatime);
-    SDL_Texture* getTexture() {return texture;};
-    SDL_Rect getCollider() {return collider;};
-    SDL_Rect getCurrentFrame() {return currentFrame;};
+    // Constructor รับค่าพื้นฐานในการแสดงผล
+    Entity(float p_x, float p_y, float p_width, float p_height, SDL_Texture* p_texture);
+    virtual ~Entity() = default;
+    
+    SDL_Rect getCurrentFrame() const { return currentFrame; }
+    SDL_Texture* getTexture() const { return texture; }
+    
+    // Getter พื้นฐาน
+    float getX() const { return x; }
+    float getY() const { return y; }
+    float getWidth() const { return width; }
+    float getHeight() const { return height; }
+    
+    // ฟังก์ชันหาจุดกึ่งกลาง (Center) สำคัญมากสำหรับป้อมในการคำนวณระยะยิง
+    Vector2D getCenter() const {
+        return Vector2D(x + width / 2.0f, y + height / 2.0f);
+    }
+
+    SDL_Rect getCollider() const { return collider; }
+    
+    // Virtual functions ที่ลูกหลานต้องเอาไปเขียนต่อ
+    virtual void update(float deltaTime) = 0; 
+    virtual void render(SDL_Renderer* renderer);
+    
 protected:
-    float x, y, width, height;
+    float x, y;
+    float width, height;
     SDL_Rect collider;
-    SDL_Rect currentFrame;
+    SDL_Rect currentFrame; // สำหรับจัดการ Sprite Sheet (ถ้ามี)
     SDL_Texture* texture;
 };
