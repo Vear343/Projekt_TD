@@ -36,6 +36,6 @@ public:
 ////////////////////////////////////////////////////
 class IceTower : public Tower {
 public:
-    IceTower(float p_x, float p_y, SDL_Texture* p_texture);
+    IceTower(Vector2D pos, SDL_Texture* p_texture);
     void updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies) override;
 };
