@@ -21,7 +21,7 @@ public:
     void render(SDL_Renderer* renderer);
     void renderEntity(SDL_Renderer* renderer, SDL_Texture* tex, Vector2D pos, float angle);
     
-    private:
+private:
     int mapData[GRID_H][GRID_W];
     enum TileType{
         EMPTY = 0,
