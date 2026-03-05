@@ -105,7 +105,7 @@ void Game::handleEvents()
                 if (level.isEmpty(gx, gy))
                 {
                     Vector2D world = level.gridToWorld(gx, gy);
-                    towers.push_back(std::make_unique<IceTower>(world));
+                    towers.push_back(std::make_unique<IceTower>(world, iceTowerTexture));
                     level.setTile(gx, gy, Level::TOWER);
                 }
             }

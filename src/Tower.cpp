@@ -48,12 +48,12 @@ void FireTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemi
 ////////////////////////////////////////////////////
 // ICE TOWER: ดาเมจน้อย + สตั้น (Stun) 0.5 วินาที
 ////////////////////////////////////////////////////
-IceTower::IceTower(float p_x, float p_y, SDL_Texture* p_texture)
-    : Tower(p_x, p_y, p_texture) 
+IceTower::IceTower(Vector2D pos, SDL_Texture* p_texture)
+    : Tower(pos.x, pos.y, p_texture) 
 {
     damage = 5.0f;
     range = 120.0f;
-    attackSpeed = 2.0f; // ยิงช้ากว่าป้อมไฟ
+    attackSpeed = 2.0f;
 }
 
 void IceTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies) {
