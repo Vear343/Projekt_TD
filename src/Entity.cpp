@@ -1,26 +1,33 @@
-#include<SDL2/SDL.h>
-#include<SDL2/SDL_image.h>
-#include <iostream>
-
 #include "Entity.h"
 
 Entity::Entity(float p_x, float p_y, float p_width, float p_height, SDL_Texture* p_texture)
-    :x(p_x),
-     y(p_y), 
-     width(p_width),
-     height(p_height),
-     texture(p_texture)
+    : x(p_x), y(p_y), width(p_width), height(p_height), texture(p_texture)
 {
-    currentFrame.w = width;
-    currentFrame.h = height;
-    currentFrame.x = p_x;
-    currentFrame.y = p_y;
+    // ตั้งค่า Source Rect (สมมติว่าใช้ทั้งรูปภาพเป็น 1 Frame)
+    currentFrame.x = 0;
+    currentFrame.y = 0;
+    currentFrame.w = static_cast<int>(p_width);
+    currentFrame.h = static_cast<int>(p_height);
 
-    collider.w = width;
-    collider.h = height;
+    // ตั้งค่า Collider ให้ตรงกับตำแหน่งวัตถุ
+    collider.x = static_cast<int>(p_x);
+    collider.y = static_cast<int>(p_y);
+    collider.w = static_cast<int>(p_width);
+    collider.h = static_cast<int>(p_height);
 }
 
-void Entity::update(float deltatime){
-    collider.x = static_cast<int>(x);
-    collider.y = static_cast<int>(y);
+void Entity::render(SDL_Renderer* renderer) {
+    if (texture) {
+        // ตำแหน่งที่จะวาดบนหน้าจอ
+        SDL_Rect dst;
+        dst.x = static_cast<int>(x);
+        dst.y = static_cast<int>(y);
+        dst.w = static_cast<int>(width);
+        dst.h = static_cast<int>(height);
+
+        // วาด Texture ลงบน Renderer
+        // currentFrame คือส่วนของรูปภาพที่จะตัดมา (Source)
+        // dst คือตำแหน่งและขนาดบนหน้าจอ (Destination)
+        SDL_RenderCopy(renderer, texture, &currentFrame, &dst);
+    }
 }

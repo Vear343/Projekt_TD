@@ -1,101 +1,78 @@
 #include "Tower.h"
 #include <cmath>
 
-////////////////////////////////////////////////////
-// BASE
-////////////////////////////////////////////////////
+Tower::Tower(float p_x, float p_y, SDL_Texture* p_texture)
+    : Entity(p_x, p_y, 32, 32, p_texture), // กำหนดขนาดเริ่มต้น 32x32
+      damage(0), range(0), attackSpeed(0), cooldown(0) 
+{}
 
-Tower::Tower(Vector2D pos)
-    : position(pos),
-      damage(0),
-      range(0),
-      attackSpeed(0),
-      cooldown(0)
-{
+void Tower::render(SDL_Renderer* renderer) {
+    // วาดตัวป้อมโดยใช้ข้อมูลจาก Entity
+    SDL_Rect src = getCurrentFrame();
+    SDL_Rect dst = { (int)x, (int)y, (int)width, (int)height };
+    SDL_RenderCopy(renderer, texture, &src, &dst);
 }
 
 ////////////////////////////////////////////////////
-// FIRE TOWER
+// FIRE TOWER: ทำดาเมจ + ติดไฟ (Burn) 3 วินาที
 ////////////////////////////////////////////////////
-
-FireTower::FireTower(Vector2D pos)
-    : Tower(pos)
+FireTower::FireTower(Vector2D pos, SDL_Texture* p_texture)
+    : Tower(pos.x, pos.y, p_texture)
 {
     damage = 20.0f;
     range = 150.0f;
-    attackSpeed = 1.0f;
+    attackSpeed = 1.0f; // ยิงทุก 1 วินาที
 }
 
-void FireTower::update(float dt,
-    std::vector<std::unique_ptr<Enemy>>& enemies)
-{
-    cooldown -= dt;
+void FireTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies) {
+    if (cooldown > 0) cooldown -= dt;
 
-    for (auto& enemy : enemies)
-    {
-        if (!enemy->isAlive()) continue;
+    if (cooldown <= 0) {
+        for (auto& enemy : enemies) {
+            if (!enemy->isAlive()) continue;
 
-        Vector2D enemyPos = enemy->getPosition();
+            float dx = (x + width/2) - enemy->getX();
+            float dy = (y + height/2) - enemy->getY();
+            float distSq = dx*dx + dy*dy; // ใช้ Squared Distance เพื่อลดภาระ CPU
 
-        float dx = position.x - enemyPos.x;
-        float dy = position.y - enemyPos.y;
-        float dist = std::sqrt(dx * dx + dy * dy);
-
-        if (dist <= range && cooldown <= 0)
-        {
-            enemy->takeDamage(damage);
-            cooldown = attackSpeed;
-            break;
+            if (distSq <= range * range) {
+                enemy->takeDamage(damage);
+                enemy->applyBurn(5.0f, 3.0f); // ดาเมจเผา 5, นาน 3 วิ
+                cooldown = attackSpeed;
+                break;
+            }
         }
     }
 }
 
-void FireTower::render(SDL_Renderer* renderer)
+////////////////////////////////////////////////////
+// ICE TOWER: ดาเมจน้อย + สตั้น (Stun) 0.5 วินาที
+////////////////////////////////////////////////////
+IceTower::IceTower(float p_x, float p_y, SDL_Texture* p_texture)
+    : Tower(p_x, p_y, p_texture) 
 {
-    SDL_Rect rect = { (int)position.x - 10, (int)position.y - 10, 20, 20 };
-    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-    SDL_RenderFillRect(renderer, &rect);
+    damage = 5.0f;
+    range = 120.0f;
+    attackSpeed = 2.0f; // ยิงช้ากว่าป้อมไฟ
 }
 
-////////////////////////////////////////////////////
-// ICE TOWER
-////////////////////////////////////////////////////
+void IceTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies) {
+    if (cooldown > 0) cooldown -= dt;
 
-IceTower::IceTower(Vector2D pos)
-    : Tower(pos)
-{
-    damage = 10.0f;
-    range = 150.0f;
-    attackSpeed = 2.0f;
-}
+    if (cooldown <= 0) {
+        for (auto& enemy : enemies) {
+            if (!enemy->isAlive()) continue;
 
-void IceTower::update(float dt,
-    std::vector<std::unique_ptr<Enemy>>& enemies)
-{
-    cooldown -= dt;
+            float dx = (x + width/2) - enemy->getX();
+            float dy = (y + height/2) - enemy->getY();
+            float distSq = dx*dx + dy*dy;
 
-    for (auto& enemy : enemies)
-    {
-        if (!enemy->isAlive()) continue;
-
-        Vector2D enemyPos = enemy->getPosition();
-
-        float dx = position.x - enemyPos.x;
-        float dy = position.y - enemyPos.y;
-        float dist = std::sqrt(dx * dx + dy * dy);
-
-        if (dist <= range && cooldown <= 0)
-        {
-            enemy->takeDamage(damage);
-            cooldown = attackSpeed;
-            break;
+            if (distSq <= range * range) {
+                enemy->takeDamage(damage);
+                enemy->applyStun(0.5f); // หยุดเดิน 0.5 วิ
+                cooldown = attackSpeed;
+                break;
+            }
         }
     }
-}
-
-void IceTower::render(SDL_Renderer* renderer)
-{
-    SDL_Rect rect = { (int)position.x - 10, (int)position.y - 10, 20, 20 };
-    SDL_SetRenderDrawColor(renderer, 0, 150, 255, 255);
-    SDL_RenderFillRect(renderer, &rect);
 }

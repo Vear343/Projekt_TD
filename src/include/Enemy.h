@@ -1,8 +1,9 @@
 #pragma once
-
 #include<SDL2/SDL.h>
 #include<SDL2/SDL_image.h>
+#include <vector>
 #include "Entity.h"
+#include "Vector2D.h"
 
 class Enemy : public Entity {
 public:
@@ -15,6 +16,9 @@ public:
     void takeDamage(float dmg);
     bool hasFinished() const { return finished;}
     void update(float deltaTime);
+    void applyStun(float duration);
+    void applyBurn(float dmg, float duration);
+    float getHp() const { return Hp; } // ไว้เช็คเลือด
 private:
     static constexpr float width = 32;
     static constexpr float height = 32;
@@ -25,4 +29,8 @@ private:
     int currentPathIndex = 0;
     bool alive = true;
     bool finished = false;
+    float stunTimer = 0.0f;
+    float burnTimer = 0.0f;
+    float burnTickTimer = 0.0f;
+    float burnDamagePerSec = 0.0f;
 };
