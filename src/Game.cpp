@@ -87,21 +87,21 @@ void Game::handleEvents()
         // left mouse button places a tower
         if (event.type == SDL_MOUSEBUTTONDOWN &&
             event.button.button == SDL_BUTTON_LEFT)
-        {
-            Vector2D mpos((float)event.button.x,
-                          (float)event.button.y);
-            int gx, gy;
-            if (level.worldToGrid(mpos, gx, gy))
             {
-                // only on empty ground
-                if (level.isEmpty(gx, gy))
+                Vector2D mpos((float)event.button.x,
+                            (float)event.button.y);
+                int gx, gy;
+                if (level.worldToGrid(mpos, gx, gy))
                 {
-                    Vector2D world = level.gridToWorld(gx, gy);
-                    towers.push_back(std::make_unique<FireTower>(world));
-                    level.setTile(gx, gy, Level::TOWER);
+                    // only on empty ground
+                    if (level.isEmpty(gx, gy))
+                    {
+                        Vector2D world = level.gridToWorld(gx, gy);
+                        towers.push_back(std::make_unique<IceTower>(world));
+                        level.setTile(gx, gy, Level::TOWER);
+                    }
                 }
             }
-        }
         }
     }
     
