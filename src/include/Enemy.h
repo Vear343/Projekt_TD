@@ -16,7 +16,7 @@ public:
     void takeDamage(float dmg);
     bool hasFinished() const { return finished;}
     void update(float deltaTime);
-    void applyStun(float duration);
+    void applyStunt(float duration);
     void applySlow(float speedModifier, float duration);
     void applyBurn(float dmg, float duration);
     float getHp() const { return Hp; } // ไว้เช็คเลือด

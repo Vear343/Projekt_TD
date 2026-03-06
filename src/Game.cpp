@@ -98,23 +98,6 @@ void Game::handleEvents() {
             event.key.keysym.sym == SDLK_r)
             enemiesToSpawn = 10; // กด R เพื่อรีเซ็ตการ spawn ศัตรู
 
-        // left mouse button places a tower
-        if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT)
-        {
-            Vector2D mpos((float)event.button.x,
-                        (float)event.button.y);
-            int gx, gy;
-            if (level.worldToGrid(mpos, gx, gy))
-            {
-                // only on empty ground
-                if (level.isEmpty(gx, gy))
-                {
-                    Vector2D world = level.gridToWorld(gx, gy);
-                    towers.push_back(std::make_unique<IceTower>(world, iceTowerTexture, iceProjectileTexture));
-                    level.setTile(gx, gy, Level::TOWER);
-                }
-            }
-        }
         if (event.type == SDL_MOUSEMOTION) {
             mousePos.x = (float)event.motion.x;
             mousePos.y = (float)event.motion.y;
@@ -143,7 +126,6 @@ void Game::handleEvents() {
                     int gx, gy;
                     if (level.worldToGrid(mpos, gx, gy) && level.isEmpty(gx, gy)) {
                         Vector2D world = level.gridToWorld(gx, gy);
-                        
                         if      (selectedType == TowerType::Fire)      towers.push_back(std::make_unique<FireTower>(world, fireTowerTex, fireProjectileTexture));
                         else if (selectedType == TowerType::Ice)       towers.push_back(std::make_unique<IceTower>(world, iceTowerTex, iceProjectileTexture));
                         else if (selectedType == TowerType::Wind)      towers.push_back(std::make_unique<WindTower>(world, windTowerTex, windProjectileTexture));
@@ -180,47 +162,22 @@ void Game::update(float deltaTime) {
 
 void Game::render() {
     window->clear();
+
+    // Render background
     if (bgTex) window->drawTextureFull(bgTex);
+
+    // Render level
     level.render(window->getRenderer());
 
+    // Render enemies and towers
     for (auto& enemy : enemies) window->render(*enemy);
     for (auto& tower : towers) tower->render(window->getRenderer());
 
-    // UI Rendering
-    int winW = window->getwidth();
-    int winH = window->getheight();
-    const int MENU_H = 100;
     
-    SDL_Rect menuRect = { 0, winH - MENU_H, winW, MENU_H };
-    SDL_SetRenderDrawBlendMode(window->getRenderer(), SDL_BLENDMODE_BLEND);
-    SDL_SetRenderDrawColor(window->getRenderer(), 40, 40, 40, 200);
-    SDL_RenderFillRect(window->getRenderer(), &menuRect);
-
-    SDL_Texture* icons[] = { fireIconTex, iceIconTex, windIconTex, lightIconTex, lightningIconTex, waterIconTex };
-    for (int i = 0; i < 6; i++) {
-        SDL_Rect btnRect = { i * 100, winH - MENU_H, 100, MENU_H };
-        if (icons[i]) SDL_RenderCopy(window->getRenderer(), icons[i], NULL, &btnRect);
-        
-        if ((int)selectedType - 1 == i) {
-            SDL_SetRenderDrawColor(window->getRenderer(), 255, 255, 0, 255);
-            SDL_RenderDrawRect(window->getRenderer(), &btnRect);
-        }
-    }
-
-    level.render(window->getRenderer());
-    
-    // Render all enemies
-    for (auto& enemy : enemies)
-        window->render(*enemy);
-
-    // draw towers
-    for (auto& tower : towers)
-        tower->render(window->getRenderer());
-
     // Render projectiles from all towers
     for (auto& tower : towers) {
         for (const auto& p : tower->projectiles)
-            window->render(*p);
+        window->render(*p);
     }
 
     // Ghost Preview
@@ -243,6 +200,27 @@ void Game::render() {
             SDL_RenderFillRect(window->getRenderer(), &ghostRect);
         }
     }
+    // UI Rendering
+    int winW = window->getwidth();
+    int winH = window->getheight();
+    const int MENU_H = 100;
+    
+    SDL_Rect menuRect = { 0, winH - MENU_H, winW, MENU_H };
+    SDL_SetRenderDrawBlendMode(window->getRenderer(), SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(window->getRenderer(), 40, 40, 40, 200);
+    SDL_RenderFillRect(window->getRenderer(), &menuRect);
+
+    SDL_Texture* icons[] = { fireIconTex, iceIconTex, windIconTex, lightIconTex, lightningIconTex, waterIconTex };
+    for (int i = 0; i < 6; i++) {
+        SDL_Rect btnRect = { i * 100, winH - MENU_H, 100, MENU_H };
+        if (icons[i]) SDL_RenderCopy(window->getRenderer(), icons[i], NULL, &btnRect);
+        
+        if ((int)selectedType - 1 == i) {
+            SDL_SetRenderDrawColor(window->getRenderer(), 255, 255, 0, 255);
+            SDL_RenderDrawRect(window->getRenderer(), &btnRect);
+        }
+    }
+    
     window->display();
 }
 

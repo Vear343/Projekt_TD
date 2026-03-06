@@ -13,6 +13,12 @@ Projectile::Projectile(float p_x, float p_y, SDL_Texture* p_texture, Enemy* p_ta
 
 void Projectile::update(float deltatime){
 
+    // if target is already dead -> delete projectile
+    if (!target || !target->isAlive()) {
+        hashit = true;
+        return;
+    }
+
     Vector2D currentPos(x, y);
     Vector2D targetPos(target->getX(), target->getY());
     Vector2D direction = targetPos - currentPos;
@@ -37,6 +43,9 @@ void Projectile::update(float deltatime){
                     break;
                 case ProjectileEffect::SLOW:
                     target->applySlow(0.5f, 2.0f); // สโลว์ศัตรูเป็นเวลา 2 วินาที
+                    break;
+                case ProjectileEffect::STUNT:
+                    target->applyStunt(2.0f); // สตั๊นศัตรูเป็นเวลา 2 วินาที
                     break;
                 default:
                     break;

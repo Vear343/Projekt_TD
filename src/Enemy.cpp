@@ -112,7 +112,7 @@ void Enemy::applySlow(float speedModifier, float duration) {
     slowTimer = std::max(slowTimer, duration);
 }
 
-void Enemy::applyStun(float duration) {
+void Enemy::applyStunt(float duration) {
     stunTimer = std::max(stunTimer, duration);
 }
 
