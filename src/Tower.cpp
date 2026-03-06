@@ -53,7 +53,7 @@ IceTower::IceTower(Vector2D pos, SDL_Texture* p_texture)
 {
     damage = 5.0f;
     range = 120.0f;
-    attackSpeed = 2.0f; // ยิงช้ากว่าป้อมไฟ
+    attackSpeed = 2.0f;
 }
 
 void IceTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies) {

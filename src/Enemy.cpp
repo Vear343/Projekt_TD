@@ -9,7 +9,7 @@ Enemy::Enemy(float p_x, float p_y, SDL_Texture* p_texture, const std::vector<Vec
       alive(true), 
       finished(false),
       Hp(100.0f),
-      speed(200.0f),
+      speed(50.0f),
       stunTimer(0.0f),
       burnTimer(0.0f),
       burnTickTimer(0.0f),

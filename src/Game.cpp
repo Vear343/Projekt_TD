@@ -96,6 +96,7 @@ void Game::handleEvents()
             event.key.keysym.sym == SDLK_x)
             running = false;
 
+
         if (event.type == SDL_MOUSEMOTION)
         {
             mousePos.x = (float)event.motion.x;
@@ -174,8 +175,7 @@ void Game::update(float deltaTime)
     }
 
     // Update towers
-    for (auto& tower : towers)
-        tower->update(deltaTime);
+    for (auto& tower : towers) tower->updateTower(deltaTime, enemies);
 
     // Remove finished enemies
     enemies.erase(

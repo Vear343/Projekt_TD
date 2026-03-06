@@ -22,7 +22,7 @@ public:
 private:
     static constexpr float width = 32;
     static constexpr float height = 32;
-    float speed = 200;
+    float speed = 50;
     float Hp = 100;
 
     std::vector<Vector2D> path;
