@@ -47,8 +47,12 @@ bool Game::init()
     // Load textures AFTER window is created
     enemyTex = window->loadTexture("assets/test_enemy.png");
     bgTex = window->loadTexture("assets/Sky_01.png");
-    fireTowerTexture = window->loadTexture("assets/fire_tower.png");
-    iceTowerTexture = window->loadTexture("assets/ice_tower.png");
+    fireTowerTexture = window->loadTexture("assets/Fire_Tower.png");
+    iceTowerTexture = window->loadTexture("assets/Ice_Tower.png");
+    
+    // Load projectile textures
+    fireProjectileTexture = window->loadTexture("assets/Fire_Ball.png");
+    iceProjectileTexture = window->loadTexture("assets/Ice_Ball.png");
 
     // Create path
     path = {
@@ -92,6 +96,10 @@ void Game::handleEvents()
         if (event.type == SDL_KEYDOWN &&
             event.key.keysym.sym == SDLK_ESCAPE)
             running = false;
+        
+        if (event.type == SDL_KEYDOWN &&
+            event.key.keysym.sym == SDLK_r)
+            enemiesToSpawn = 10; // กด R เพื่อรีเซ็ตการ spawn ศัตรู
 
         // left mouse button places a tower
         if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT)
@@ -105,7 +113,7 @@ void Game::handleEvents()
                 if (level.isEmpty(gx, gy))
                 {
                     Vector2D world = level.gridToWorld(gx, gy);
-                    towers.push_back(std::make_unique<IceTower>(world, iceTowerTexture));
+                    towers.push_back(std::make_unique<IceTower>(world, iceTowerTexture, iceProjectileTexture));
                     level.setTile(gx, gy, Level::TOWER);
                 }
             }
@@ -167,6 +175,12 @@ void Game::render()
     // draw towers
     for (auto& tower : towers)
         tower->render(window->getRenderer());
+
+    // Render projectiles from all towers
+    for (auto& tower : towers) {
+        for (const auto& p : tower->projectiles)
+            window->render(*p);
+    }
 
     window->display();
 }

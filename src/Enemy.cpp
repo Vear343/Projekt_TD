@@ -10,7 +10,7 @@ Enemy::Enemy(float p_x, float p_y, SDL_Texture* p_texture, const std::vector<Vec
       finished(false),
       Hp(100.0f),
       speed(50.0f),
-      stunTimer(0.0f),
+      SlowTimer(0.0f),
       burnTimer(0.0f),
       burnTickTimer(0.0f),
       burnDamagePerSec(0.0f)
@@ -25,9 +25,9 @@ Enemy::Enemy(float p_x, float p_y, SDL_Texture* p_texture, const std::vector<Vec
 void Enemy::update(float deltaTime) {
     if (!alive || finished) return;
 
-    // --- 1. จัดการระบบ STUN (หยุดเดิน) ---
-    if (stunTimer > 0) {
-        stunTimer -= deltaTime;
+    // --- 1. จัดการระบบ SLOW ---
+    if (SlowTimer > 0) {
+        SlowTimer -= deltaTime;
         // ปรับสีให้ดูตัวแข็ง/มึน (สีฟ้าอ่อน)
         SDL_SetTextureColorMod(texture, 150, 150, 255); 
         return; // หยุดการทำงานด้านล่างทั้งหมด (ไม่ขยับ)
@@ -96,9 +96,9 @@ void Enemy::takeDamage(float dmg) {
     }
 }
 
-void Enemy::applyStun(float duration) {
+void Enemy::applySlow(float speedModifier, float duration) {
     // ใช้ std::max เผื่อกรณีโดนยิงซ้ำ จะได้ยึดเวลาที่นานที่สุด
-    stunTimer = std::max(stunTimer, duration);
+    speed *= speedModifier; // ลดความเร็วลงตาม modifier
 }
 
 void Enemy::applyBurn(float dmg, float duration) {

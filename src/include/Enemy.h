@@ -16,7 +16,7 @@ public:
     void takeDamage(float dmg);
     bool hasFinished() const { return finished;}
     void update(float deltaTime);
-    void applyStun(float duration);
+    void applySlow(float speedModifier, float duration);
     void applyBurn(float dmg, float duration);
     float getHp() const { return Hp; } // ไว้เช็คเลือด
 private:
@@ -29,7 +29,7 @@ private:
     int currentPathIndex = 0;
     bool alive = true;
     bool finished = false;
-    float stunTimer = 0.0f;
+    float SlowTimer = 0.0f;
     float burnTimer = 0.0f;
     float burnTickTimer = 0.0f;
     float burnDamagePerSec = 0.0f;

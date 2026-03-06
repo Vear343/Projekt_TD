@@ -7,6 +7,7 @@
 #include "Level.h"
 #include "Enemy.h"
 #include "Tower.h"
+#include "Projectile.h"
 
 
 class Game
@@ -35,12 +36,15 @@ private:
     int  enemiesToSpawn = 10; // จำนวนศัตรูที่จะ spawn
 
     SDL_Texture* enemyTex;
-    SDL_Texture* bgTex;             // sky/background image
+    SDL_Texture* bgTex;
     SDL_Texture* fireTowerTexture = nullptr;
     SDL_Texture* iceTowerTexture = nullptr;
+    SDL_Texture* fireProjectileTexture = nullptr;
+    SDL_Texture* iceProjectileTexture = nullptr;
     std::vector<Vector2D> path;
     std::vector<std::unique_ptr<Tower>> towers;
     std::vector<std::unique_ptr<Enemy>> enemies;
+    std::vector<std::unique_ptr<Projectile>> projectiles;
 
     
     SDL_Event event;
