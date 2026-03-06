@@ -13,9 +13,10 @@ Enemy::Enemy(float p_x, float p_y, SDL_Texture* p_texture, const std::vector<Vec
       stunTimer(0.0f),
       burnTimer(0.0f),
       burnTickTimer(0.0f),
-      burnDamagePerSec(0.0f)
+      burnDamagePerSec(0.0f),
+      slowTimer(0.0f),      // อย่าลืมกำหนดค่าเริ่มต้น
+      speedMultiplier(1.0f) 
 {
-    // ตั้งค่า Collider เริ่มต้นให้ตรงกับตำแหน่งเกิด
     collider.w = static_cast<int>(width);
     collider.h = static_cast<int>(height);
     collider.x = static_cast<int>(x);
@@ -25,38 +26,47 @@ Enemy::Enemy(float p_x, float p_y, SDL_Texture* p_texture, const std::vector<Vec
 void Enemy::update(float deltaTime) {
     if (!alive || finished) return;
 
-    // --- 1. จัดการระบบ STUN (หยุดเดิน) ---
+    // --- 1. จัดการสถานะผิดปกติ (Status Effects) ---
+
+    // ระบบ STUN (หยุดเดิน)
     if (stunTimer > 0) {
         stunTimer -= deltaTime;
-        // ปรับสีให้ดูตัวแข็ง/มึน (สีฟ้าอ่อน)
-        SDL_SetTextureColorMod(texture, 150, 150, 255); 
-        return; // หยุดการทำงานด้านล่างทั้งหมด (ไม่ขยับ)
+        SDL_SetTextureColorMod(texture, 150, 150, 255); // สีฟ้า
+        return; 
     }
 
-    // --- 2. จัดการระบบ BURN (Damage Over Time) ---
+    // ระบบ SLOW (ลดความเร็ว)
+    if (slowTimer > 0) {
+        slowTimer -= deltaTime;
+        speedMultiplier = 0.5f;
+        SDL_SetTextureColorMod(texture, 150, 255, 255); // สีฟ้าอ่อน/น้ำ
+    } else {
+        speedMultiplier = 1.0f;
+    }
+
+    // ระบบ BURN (ดาเมจต่อเนื่อง)
     if (burnTimer > 0) {
         burnTimer -= deltaTime;
         burnTickTimer += deltaTime;
-
-        // ย้อมสีตัวละครเป็นสีส้ม/แดง เมื่อติดไฟ
-        SDL_SetTextureColorMod(texture, 255, 100, 100);
-
-        if (burnTickTimer >= 1.0f) { // ทำดาเมจทุกๆ 1 วินาที
+        SDL_SetTextureColorMod(texture, 255, 100, 100); // สีส้มแดง
+        if (burnTickTimer >= 1.0f) {
             takeDamage(burnDamagePerSec);
             burnTickTimer = 0.0f; 
         }
-    } else {
-        // ถ้าไม่ติดสถานะอะไรเลย ให้คืนสีปกติ
+    } 
+
+    // คืนสีปกติถ้าไม่มีสถานะอะไรเลย
+    if (stunTimer <= 0 && slowTimer <= 0 && burnTimer <= 0) {
         SDL_SetTextureColorMod(texture, 255, 255, 255);
     }
 
-    // --- 3. เช็คว่าตายหรือยัง (หลังจากโดนสถานะต่างๆ) ---
+    // --- 2. เช็คการตาย ---
     if (Hp <= 0) {
         alive = false;
         return;
     }
 
-    // --- 4. Logic การเคลื่อนที่ตาม Path ---
+    // --- 3. การเคลื่อนที่ตาม Path ---
     if (currentPathIndex >= path.size()) {
         finished = true;
         return;
@@ -66,22 +76,24 @@ void Enemy::update(float deltaTime) {
     Vector2D currentPos(x, y);
     Vector2D direction = target - currentPos;
 
-    // คำนวณระยะห่าง
+    // หาความยาว (Distance) โดยใช้ length() จาก Vector2D หรือคำนวณสด
     float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
 
-    // ถ้าใกล้จุดเป้าหมายมากพอ ให้เปลี่ยนไปจุดถัดไป
     if (distance < 5.0f) {
         currentPathIndex++;
         return;
     }
 
-    // ทำ Direction ให้เป็น Unit Vector (Normalize)
+    // Normalize ทิศทาง
     direction.x /= distance;
     direction.y /= distance;
 
-    // เคลื่อนที่ตามทิศทางและความเร็ว
-    x += direction.x * speed * deltaTime;
-    y += direction.y * speed * deltaTime;
+    // คำนวณความเร็วสุดท้าย (ความเร็วพื้นฐาน * ตัวคูณสโลว์)
+    float finalSpeed = speed * speedMultiplier;
+
+    // อัปเดตตำแหน่ง
+    x += direction.x * finalSpeed * deltaTime;
+    y += direction.y * finalSpeed * deltaTime;
 
     // อัปเดตตำแหน่ง Collider
     collider.x = static_cast<int>(x);
@@ -97,11 +109,39 @@ void Enemy::takeDamage(float dmg) {
 }
 
 void Enemy::applyStun(float duration) {
-    // ใช้ std::max เผื่อกรณีโดนยิงซ้ำ จะได้ยึดเวลาที่นานที่สุด
     stunTimer = std::max(stunTimer, duration);
 }
 
 void Enemy::applyBurn(float dmg, float duration) {
     burnDamagePerSec = dmg;
     burnTimer = std::max(burnTimer, duration);
+}
+
+void Enemy::applySlow(float duration) {
+    slowTimer = std::max(slowTimer, duration);
+}
+
+void Enemy::pushBack(float distance) {
+    // ต้องมีอย่างน้อย 1 จุดใน path ถึงจะถอยได้
+    if (currentPathIndex > 0) {
+        Vector2D prevPoint = path[currentPathIndex - 1];
+        Vector2D currentPos(x, y);
+        Vector2D pushDir = prevPoint - currentPos;
+        
+        float dist = std::sqrt(pushDir.x * pushDir.x + pushDir.y * pushDir.y);
+        if (dist > 0) {
+            // ดันกลับไปทางจุดก่อนหน้า
+            x += (pushDir.x / dist) * distance;
+            y += (pushDir.y / dist) * distance;
+        }
+    } else {
+        // ถ้าอยู่ที่จุดเริ่ม ให้ดันถอยหลังออกจากจุดเป้าหมายแรก
+        Vector2D targetPoint = path[0];
+        Vector2D pushDir = Vector2D(x, y) - targetPoint;
+        float dist = std::sqrt(pushDir.x * pushDir.x + pushDir.y * pushDir.y);
+        if (dist > 0) {
+            x += (pushDir.x / dist) * distance;
+            y += (pushDir.y / dist) * distance;
+        }
+    }
 }

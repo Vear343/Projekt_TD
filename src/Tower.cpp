@@ -1,5 +1,6 @@
 #include "Tower.h"
 #include <cmath>
+#include <iostream>
 
 Tower::Tower(float p_x, float p_y, SDL_Texture* p_texture)
     : Entity(p_x, p_y, 32, 32, p_texture), // กำหนดขนาดเริ่มต้น 32x32
@@ -70,6 +71,55 @@ void IceTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemie
             if (distSq <= range * range) {
                 enemy->takeDamage(damage);
                 enemy->applyStun(0.5f); // หยุดเดิน 0.5 วิ
+                cooldown = attackSpeed;
+                break;
+            }
+        }
+    }
+}
+void WindTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies) {
+    cooldown -= dt;
+    if (cooldown <= 0) {
+        for (auto& enemy : enemies) {
+            if ((getCenter() - enemy->getCenter()).length() <= range) {
+                enemy->takeDamage(damage);
+                enemy->pushBack(30.0f); // ผลักถอยหลัง 30 พิกเซล
+                cooldown = attackSpeed;
+                break;
+            }
+        }
+    }
+}
+void LightTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies) {
+    cooldown -= dt;
+    if (cooldown <= 0) {
+        playerMoney += 50.0f; // เพิ่มเงิน 50 ทุก 20 วิ
+        cooldown = attackSpeed;
+        std::cout << "Generated Money! Current: " << playerMoney << std::endl;
+    }
+}
+void LightningTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies) {
+    cooldown -= dt;
+    if (cooldown <= 0) {
+        int targetsHit = 0;
+        float currentDamage = damage;
+        for (auto& enemy : enemies) {
+            if (targetsHit >= 3) break; // ชิ่งครบ 3 ตัวหยุด
+            if ((getCenter() - enemy->getCenter()).length() <= range) {
+                enemy->takeDamage(currentDamage);
+                currentDamage *= 0.6f; // ลดดาเมจเหลือ 60% สำหรับตัวถัดไป
+                targetsHit++;
+            }
+        }
+        if (targetsHit > 0) cooldown = attackSpeed;
+    }
+}
+void WaterTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies) {
+    cooldown -= dt;
+    if (cooldown <= 0) {
+        for (auto& enemy : enemies) {
+            if ((getCenter() - enemy->getCenter()).length() <= range) {
+                enemy->applySlow(2.0f); // ติดสโลว์ 2 วิ (ต้องเพิ่มฟังก์ชันนี้ใน Enemy)
                 cooldown = attackSpeed;
                 break;
             }

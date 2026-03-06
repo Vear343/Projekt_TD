@@ -19,6 +19,10 @@ public:
     void applyStun(float duration);
     void applyBurn(float dmg, float duration);
     float getHp() const { return Hp; } // ไว้เช็คเลือด
+    float speedMultiplier = 1.0f;
+    float slowTimer = 0.0f;
+    void pushBack(float distance);
+    void applySlow(float duration);
 private:
     static constexpr float width = 32;
     static constexpr float height = 32;
@@ -33,4 +37,6 @@ private:
     float burnTimer = 0.0f;
     float burnTickTimer = 0.0f;
     float burnDamagePerSec = 0.0f;
+    
+    
 };
