@@ -8,7 +8,9 @@
 enum class ProjectileEffect {
     NORMAL,
     BURN,
+    STUNT,
     SLOW,
+    
 };
 
 class Projectile : public Entity{   
