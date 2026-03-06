@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <memory>
+#include <string>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
@@ -21,6 +22,9 @@ public:
     void render();
     void clean();
     
+    // ฟังก์ชันจัดการ Wave
+    void startNextWave();
+
 private:
     bool running;
     float gold;
@@ -31,17 +35,17 @@ private:
     std::vector<std::unique_ptr<Tower>> towers;
     std::vector<Vector2D> path;
 
-    // ตัวแปรสำหรับควบคุมการ spawn ศัตรู
+    // ระบบ Wave
+    int currentWave;
+    int enemiesToSpawnInWave;
     float spawnTimer;
     float spawnDelay;
-    int enemiesToSpawn;
+    bool waveActive;
 
     // Textures
     SDL_Texture* enemyTex;
     SDL_Texture* bgTex;
     SDL_Texture* menuTex;
-
-    // UI Icons
     SDL_Texture* fireIconTex;
     SDL_Texture* iceIconTex;
     SDL_Texture* windIconTex;
@@ -49,7 +53,6 @@ private:
     SDL_Texture* lightningIconTex;
     SDL_Texture* waterIconTex;
 
-    // Tower Textures
     SDL_Texture* fireTowerTex;
     SDL_Texture* iceTowerTex;
     SDL_Texture* windTowerTex;
