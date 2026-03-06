@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <memory>
+#include <string>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
@@ -22,17 +23,21 @@ public:
     void render();
     void clean();
     
+    // ฟังก์ชันจัดการ Wave
+    void startNextWave();
+
 private:
     bool running;
     float gold;
     RenderWindow* window;
     Level level;
-
     
-    // ตัวแปรสำหรับควบคุมการ spawn ศัตรู
-    float spawnTimer = 0.0f;
-    float spawnDelay = 1.0f;
-    int  enemiesToSpawn = 10; // จำนวนศัตรูที่จะ spawn
+    // ระบบ Wave
+    int currentWave;
+    int enemiesToSpawnInWave;
+    float spawnTimer;
+    float spawnDelay;
+    bool waveActive;
 
     // Textures
     SDL_Texture* menuTex;
@@ -65,7 +70,6 @@ private:
     SDL_Texture* lightningIconTex;
     SDL_Texture* waterIconTex;
 
-    // Tower Textures
     SDL_Texture* fireTowerTex;
     SDL_Texture* iceTowerTex;
     SDL_Texture* windTowerTex;

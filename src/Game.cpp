@@ -1,18 +1,14 @@
 #include "Game.h"
 #include <algorithm>
 #include <iostream>
-#include <memory>
 
 Game::Game()
-    : running(false), gold(200.0f), window(nullptr), 
-      spawnTimer(0.0f), spawnDelay(1.0f), enemiesToSpawn(10),
-      enemyTex(nullptr), bgTex(nullptr), menuTex(nullptr),
-      fireIconTex(nullptr), iceIconTex(nullptr), windIconTex(nullptr),
-      lightIconTex(nullptr), lightningIconTex(nullptr), waterIconTex(nullptr),
-      fireTowerTex(nullptr), iceTowerTex(nullptr), windTowerTex(nullptr),
-      lightTowerTex(nullptr), lightningTowerTex(nullptr), waterTowerTex(nullptr)
+    : running(false), gold(500.0f), window(nullptr), 
+      currentWave(0), enemiesToSpawnInWave(0), spawnTimer(0.0f), 
+      spawnDelay(1.0f), waveActive(false),
+      enemyTex(nullptr), bgTex(nullptr), menuTex(nullptr)
 {
-    // กำหนดค่าเริ่มต้นผ่าน Initializer list ด้านบนแล้ว
+    // Initializer list จัดการค่าเริ่มต้นแล้ว
 }
 
 Game::~Game() {
@@ -20,20 +16,13 @@ Game::~Game() {
 }
 
 bool Game::init() {
-    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-        std::cout << "SDL Init Failed\n";
-        return false;
-    }
+    if (SDL_Init(SDL_INIT_VIDEO) != 0) return false;
+    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) return false;
 
-    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
-        std::cout << "IMG Init Failed\n";
-        return false;
-    }
+    window = new RenderWindow("Tower Defense | Press 'N' for Next Wave", 1280, 720);
 
-    window = new RenderWindow("Tower Defense", 1280, 720);
-
-    // Load Textures
-    enemyTex = window->loadTexture("assets/test_enemy.png");
+    // โหลด Texture ทั้งหมด
+    enemyTex = window->loadTexture("assets/Enemy_Beta.png");
     bgTex = window->loadTexture("assets/Sky_01.png");
 
     // Load Towers
@@ -52,14 +41,14 @@ bool Game::init() {
     lightningProjectileTexture = window->loadTexture("assets/Lightning_Ball.png");
     waterProjectileTexture = window->loadTexture("assets/Water_Ball.png");
     menuTex = window->loadTexture("assets/Tower_Menu.png");
-
-    // Load Icons
-    fireIconTex      = window->loadTexture("assets/fire_icon.png");
-    iceIconTex       = window->loadTexture("assets/ice_icon.png");
-    windIconTex      = window->loadTexture("assets/wind_icon.png");
-    lightIconTex     = window->loadTexture("assets/light_icon.png");
-    lightningIconTex = window->loadTexture("assets/lightning_icon.png");
-    waterIconTex     = window->loadTexture("assets/water_icon.png");
+    
+    // Icons
+    fireIconTex = window->loadTexture("assets/Fire_Tower.png");
+    iceIconTex = window->loadTexture("assets/Ice_Tower.png");
+    windIconTex = window->loadTexture("assets/Wind_Tower.png");
+    lightIconTex = window->loadTexture("assets/Light_Tower.png");
+    lightningIconTex = window->loadTexture("assets/Lightning_Tower.png");
+    waterIconTex = window->loadTexture("assets/Water_Tower.png");
 
     path = {
         level.gridToWorld(0,0),
@@ -67,6 +56,7 @@ bool Game::init() {
         level.gridToWorld(10,10),
         level.gridToWorld(20,10),
         level.gridToWorld(20,20),
+        level.gridToWorld(30,40),
     };
 
     lastTime = SDL_GetPerformanceCounter();
@@ -74,29 +64,26 @@ bool Game::init() {
     return true;
 }
 
-void Game::run() {
-    while (running) {
-        Uint64 currentTime = SDL_GetPerformanceCounter();
-        float deltaTime = (float)(currentTime - lastTime) / SDL_GetPerformanceFrequency();
-        lastTime = currentTime;
-
-        handleEvents();
-        update(deltaTime);
-        render();
+void Game::startNextWave() {
+    // ระบบ Skip Bonus: ถ้า Wave เก่ายังไม่หมด ได้เงินเพิ่ม 100
+    if (waveActive && !enemies.empty()) {
+        gold += 100.0f;
     }
+
+    currentWave++;
+    waveActive = true;
+    enemiesToSpawnInWave = 10; // มาเป็นชุด ชุดละ 10 ตัว
+    spawnTimer = 0.0f;
+    std::cout << "Wave " << currentWave << " Started!" << std::endl;
 }
 
 void Game::handleEvents() {
     while (SDL_PollEvent(&event)) {
         if (event.type == SDL_QUIT) running = false;
-        
-        if (event.type == SDL_KEYDOWN &&
-            event.key.keysym.sym == SDLK_ESCAPE)
-            running = false;
-        
-        if (event.type == SDL_KEYDOWN &&
-            event.key.keysym.sym == SDLK_r)
-            enemiesToSpawn = 10; // กด R เพื่อรีเซ็ตการ spawn ศัตรู
+
+        if (event.type == SDL_KEYDOWN) {
+            if (event.key.keysym.sym == SDLK_n) startNextWave(); // กด N เพื่อเริ่ม/ข้าม Wave
+        }
 
         if (event.type == SDL_MOUSEMOTION) {
             mousePos.x = (float)event.motion.x;
@@ -106,22 +93,19 @@ void Game::handleEvents() {
         if (event.type == SDL_MOUSEBUTTONDOWN) {
             Vector2D mpos((float)event.button.x, (float)event.button.y);
             int winH = window->getheight();
-            const int MENU_H = 100;
-
+            
             if (event.button.button == SDL_BUTTON_LEFT) {
-                // UI Selection
-                if (mpos.y >= winH - MENU_H) {
-                    int buttonIdx = (int)mpos.x / 100;
-                    switch(buttonIdx) {
-                        case 0: selectedType = TowerType::Fire; break;
-                        case 1: selectedType = TowerType::Ice; break;
-                        case 2: selectedType = TowerType::Wind; break;
-                        case 3: selectedType = TowerType::Light; break;
-                        case 4: selectedType = TowerType::Lightning; break;
-                        case 5: selectedType = TowerType::Water; break;
-                    }
+                // คลิกเลือกป้อมจาก UI (แถบล่าง 100px)
+                if (mpos.y >= winH - 100) {
+                    int idx = (int)mpos.x / 100;
+                    if (idx == 0) selectedType = TowerType::Fire;
+                    else if (idx == 1) selectedType = TowerType::Ice;
+                    else if (idx == 2) selectedType = TowerType::Wind;
+                    else if (idx == 3) selectedType = TowerType::Light;
+                    else if (idx == 4) selectedType = TowerType::Lightning;
+                    else if (idx == 5) selectedType = TowerType::Water;
                 }
-                // Placement
+                // วางป้อม
                 else if (selectedType != TowerType::None) {
                     int gx, gy;
                     if (level.worldToGrid(mpos, gx, gy) && level.isEmpty(gx, gy)) {
@@ -145,18 +129,45 @@ void Game::handleEvents() {
 }
 
 void Game::update(float deltaTime) {
-    spawnTimer += deltaTime;
-    if (spawnTimer >= spawnDelay && enemiesToSpawn > 0) {
-        enemies.push_back(std::make_unique<Enemy>(path[0].x, path[0].y, enemyTex, path));
-        spawnTimer = 0.0f;
-        enemiesToSpawn--;
+    // 1. ระบบ Spawn มอนสเตอร์
+    if (waveActive && enemiesToSpawnInWave > 0) {
+        spawnTimer += deltaTime;
+        if (spawnTimer >= spawnDelay) {
+            auto newEnemy = std::make_unique<Enemy>(path[0].x, path[0].y, enemyTex, path);
+            
+            // ถ้าเป็นตัวสุดท้ายของ Wave (ตัวที่ 1) ให้เป็นบอส
+            if (enemiesToSpawnInWave == 1) {
+                newEnemy->setHp(500.0f);   // แกร่งกว่า 5 เท่า
+                newEnemy->setSpeed(20.0f); // บอสเดินช้า
+            }
+            
+            enemies.push_back(std::move(newEnemy));
+            enemiesToSpawnInWave--;
+            spawnTimer = 0.0f;
+        }
     }
 
-    for (auto& enemy : enemies) enemy->update(deltaTime);
+    // 2. อัปเดตมอนสเตอร์และเช็คการตาย
+    for (auto& enemy : enemies) {
+        enemy->update(deltaTime);
+        // ถ้ามอนตาย (isAlive เป็น false) และยังไม่ได้ให้รางวัล
+        if (!enemy->isAlive() && !enemy->isRewardGiven()) {
+            gold += 50.0f; // สังหารได้เงิน 50
+            enemy->setRewardGiven(true);
+        }
+    }
+
     for (auto& tower : towers) tower->updateTower(deltaTime, enemies);
 
+    // 3. แสดงผล Gold บน Window Title แบบ Real-time
+    std::string title = "Tower Defense | Gold: " + std::to_string((int)gold) + 
+                        " | Wave: " + std::to_string(currentWave) + 
+                        " | Enemies: " + std::to_string(enemies.size());
+    SDL_SetWindowTitle(window->getSDLWindow(), title.c_str());
+
+    // ลบมอนสเตอร์ที่ตายหรือเข้าเส้นชัย
     enemies.erase(std::remove_if(enemies.begin(), enemies.end(),
-        [](const std::unique_ptr<Enemy>& e) { return e->hasFinished() || !e->isAlive(); }), 
+        [](const std::unique_ptr<Enemy>& e) { return !e->isAlive() || e->hasFinished(); }), 
         enemies.end());
 }
 
@@ -224,17 +235,19 @@ void Game::render() {
     window->display();
 }
 
-void Game::clean() {
-    // ฟังก์ชันช่วยทำลาย Texture
-    auto destroy = [](SDL_Texture*& tex) { if(tex) { SDL_DestroyTexture(tex); tex = nullptr; } };
-    
-    destroy(enemyTex); destroy(bgTex); destroy(menuTex);
-    destroy(fireIconTex); destroy(iceIconTex); destroy(windIconTex);
-    destroy(lightIconTex); destroy(lightningIconTex); destroy(waterIconTex);
-    destroy(fireTowerTex); destroy(iceTowerTex); destroy(windTowerTex);
-    destroy(lightTowerTex); destroy(lightningTowerTex); destroy(waterTowerTex);
+void Game::run() {
+    while (running) {
+        Uint64 currentTime = SDL_GetPerformanceCounter();
+        float deltaTime = (float)(currentTime - lastTime) / SDL_GetPerformanceFrequency();
+        lastTime = currentTime;
+        handleEvents();
+        update(deltaTime);
+        render();
+    }
+}
 
-    if (window) { window->cleanUp(); delete window; window = nullptr; }
+void Game::clean() {
+    if (window) { window->cleanUp(); delete window; }
     IMG_Quit();
     SDL_Quit();
 }

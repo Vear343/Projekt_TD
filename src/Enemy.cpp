@@ -3,21 +3,24 @@
 #include <algorithm>
 
 Enemy::Enemy(float p_x, float p_y, SDL_Texture* p_texture, const std::vector<Vector2D>& p_path)
-    : Entity(p_x, p_y, width, height, p_texture), 
+    : Entity(p_x, p_y, 64, 64, p_texture), 
       path(p_path), 
       currentPathIndex(0), 
+      hp(100.0f),
+      speed(50.0f),
       alive(true), 
       finished(false),
-      Hp(100.0f),
-      speed(50.0f),
+      rewardGiven(false),
+      reachedEnd(false),
+      stunTimer(0.0f),
       burnTimer(0.0f),
       burnTickTimer(0.0f),
       burnDamagePerSec(0.0f),
-      slowTimer(0.0f),      // อย่าลืมกำหนดค่าเริ่มต้น
-      speedMultiplier(1.0f) 
+      slowTimer(0.0f),
+      speedMultiplier(1.0f)
 {
-    collider.w = static_cast<int>(width);
-    collider.h = static_cast<int>(height);
+    collider.w = 64;
+    collider.h = 64;
     collider.x = static_cast<int>(x);
     collider.y = static_cast<int>(y);
 }
@@ -25,47 +28,41 @@ Enemy::Enemy(float p_x, float p_y, SDL_Texture* p_texture, const std::vector<Vec
 void Enemy::update(float deltaTime) {
     if (!alive || finished) return;
 
-    // --- 1. จัดการสถานะผิดปกติ (Status Effects) ---
-
-    // ระบบ STUN (หยุดเดิน)
+    // 1. Status Effects
     if (stunTimer > 0) {
         stunTimer -= deltaTime;
-        SDL_SetTextureColorMod(texture, 150, 150, 255); // สีฟ้า
+        SDL_SetTextureColorMod(texture, 150, 150, 255);
         return; 
     }
 
-    // ระบบ SLOW (ลดความเร็ว)
     if (slowTimer > 0) {
         slowTimer -= deltaTime;
         speedMultiplier = 0.5f;
-        SDL_SetTextureColorMod(texture, 150, 255, 255); // สีฟ้าอ่อน/น้ำ
+        SDL_SetTextureColorMod(texture, 150, 255, 255);
     } else {
         speedMultiplier = 1.0f;
     }
 
-    // ระบบ BURN (ดาเมจต่อเนื่อง)
     if (burnTimer > 0) {
         burnTimer -= deltaTime;
         burnTickTimer += deltaTime;
-        SDL_SetTextureColorMod(texture, 255, 100, 100); // สีส้มแดง
+        SDL_SetTextureColorMod(texture, 255, 100, 100);
         if (burnTickTimer >= 1.0f) {
             takeDamage(burnDamagePerSec);
             burnTickTimer = 0.0f; 
         }
     } 
 
-    // คืนสีปกติถ้าไม่มีสถานะอะไรเลย
     if (stunTimer <= 0 && slowTimer <= 0 && burnTimer <= 0) {
         SDL_SetTextureColorMod(texture, 255, 255, 255);
     }
 
-    // --- 2. เช็คการตาย ---
-    if (Hp <= 0) {
+    // 2. Movement
+    if (hp <= 0) {
         alive = false;
         return;
     }
 
-    // --- 3. การเคลื่อนที่ตาม Path ---
     if (currentPathIndex >= path.size()) {
         finished = true;
         return;
@@ -75,7 +72,6 @@ void Enemy::update(float deltaTime) {
     Vector2D currentPos(x, y);
     Vector2D direction = target - currentPos;
 
-    // หาความยาว (Distance) โดยใช้ length() จาก Vector2D หรือคำนวณสด
     float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
 
     if (distance < 5.0f) {
@@ -83,26 +79,17 @@ void Enemy::update(float deltaTime) {
         return;
     }
 
-    // Normalize ทิศทาง
-    direction.x /= distance;
-    direction.y /= distance;
+    x += (direction.x / distance) * speed * speedMultiplier * deltaTime;
+    y += (direction.y / distance) * speed * speedMultiplier * deltaTime;
 
-    // คำนวณความเร็วสุดท้าย (ความเร็วพื้นฐาน * ตัวคูณสโลว์)
-    float finalSpeed = speed * speedMultiplier;
-
-    // อัปเดตตำแหน่ง
-    x += direction.x * finalSpeed * deltaTime;
-    y += direction.y * finalSpeed * deltaTime;
-
-    // อัปเดตตำแหน่ง Collider
     collider.x = static_cast<int>(x);
     collider.y = static_cast<int>(y);
 }
 
 void Enemy::takeDamage(float dmg) {
-    Hp -= dmg;
-    if (Hp <= 0) {
-        Hp = 0;
+    hp -= dmg;
+    if (hp <= 0) {
+        hp = 0;
         alive = false;
     }
 }
@@ -122,22 +109,8 @@ void Enemy::applyBurn(float dmg, float duration) {
 }
 
 void Enemy::pushBack(float distance) {
-    // ต้องมีอย่างน้อย 1 จุดใน path ถึงจะถอยได้
     if (currentPathIndex > 0) {
-        Vector2D prevPoint = path[currentPathIndex - 1];
-        Vector2D currentPos(x, y);
-        Vector2D pushDir = prevPoint - currentPos;
-        
-        float dist = std::sqrt(pushDir.x * pushDir.x + pushDir.y * pushDir.y);
-        if (dist > 0) {
-            // ดันกลับไปทางจุดก่อนหน้า
-            x += (pushDir.x / dist) * distance;
-            y += (pushDir.y / dist) * distance;
-        }
-    } else {
-        // ถ้าอยู่ที่จุดเริ่ม ให้ดันถอยหลังออกจากจุดเป้าหมายแรก
-        Vector2D targetPoint = path[0];
-        Vector2D pushDir = Vector2D(x, y) - targetPoint;
+        Vector2D pushDir = path[currentPathIndex - 1] - Vector2D(x, y);
         float dist = std::sqrt(pushDir.x * pushDir.x + pushDir.y * pushDir.y);
         if (dist > 0) {
             x += (pushDir.x / dist) * distance;
