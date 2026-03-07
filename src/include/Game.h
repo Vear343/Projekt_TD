@@ -41,6 +41,7 @@ private:
 
     // Textures
     SDL_Texture* menuTex;
+    SDL_Texture* playButtonTexture;
     SDL_Texture* enemyTex;
     SDL_Texture* bgTex;
     SDL_Texture* fireTowerTexture = nullptr;
@@ -83,4 +84,7 @@ private:
     enum class TowerType { None, Fire, Ice, Wind, Light, Lightning, Water };
     TowerType selectedType = TowerType::None;
     Vector2D mousePos;
+
+    enum class GameState { Menu, Playing };
+    GameState currentState;
 };
