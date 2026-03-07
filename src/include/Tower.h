@@ -12,9 +12,10 @@ protected:
     float range;
     float attackSpeed;
     float cooldown;
+    SDL_Texture* projectileTexture; // Texture for projectiles
 
 public:
-    Tower(float p_x, float p_y, SDL_Texture* p_texture);
+    Tower(Vector2D pos, SDL_Texture* p_texture, SDL_Texture* p_projectile_texture = nullptr);
     virtual ~Tower() = default;
 
     // ฟังก์ชันสำหรับอัพเดตสถานะของป้อม เช่น การยิงศัตรู
@@ -24,18 +25,80 @@ public:
     // ฟังก์ชันสำหรับวาดป้อมบนหน้าจอ
     virtual void render(SDL_Renderer* renderer);
     void update(float deltaTime) override { }
+
+    std::vector<std::unique_ptr<Projectile>> projectiles; // เก็บกระสุนที่ป้อมยิงออกไป
+
+    Enemy* findTarget(std::vector<std::unique_ptr<Enemy>>& enemies);
 };
 
 ////////////////////////////////////////////////////
 class FireTower : public Tower {
 public:
-    FireTower(Vector2D pos, SDL_Texture* p_texture);
+    FireTower(Vector2D pos, SDL_Texture* p_texture, SDL_Texture* p_projectile_texture) : Tower(pos, p_texture, p_projectile_texture) {
+        damage = 20.0f;
+        range = 240.0f;
+        attackSpeed = 1.0f; // ยิงทุก 1 วินาที
+    }
     void updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies) override;
 };
 
 ////////////////////////////////////////////////////
 class IceTower : public Tower {
 public:
-    IceTower(Vector2D pos, SDL_Texture* p_texture);
+    IceTower(Vector2D pos, SDL_Texture* p_texture, SDL_Texture* p_projectile_texture) : Tower(pos, p_texture, p_projectile_texture) {
+        damage = 5.0f;
+        range = 200.0f;
+        attackSpeed = 1.0f;
+    }
+    void updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies) override;
+};
+////////////////////////////////////////////////////
+// 1. WIND TOWER (พัดถอยหลัง)
+////////////////////////////////////////////////////
+class WindTower : public Tower {
+public:
+    WindTower(Vector2D pos, SDL_Texture* p_texture, SDL_Texture* p_projectile_texture) : Tower(pos, p_texture, p_projectile_texture) {
+        damage = 1.0f; 
+        range = 100.0f; 
+        attackSpeed = 2.0f;
+    }
+    void updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies) override;
+};
+
+////////////////////////////////////////////////////
+// 2. LIGHT TOWER (ปั๊มเงิน - ต้องการ Pointer ไปที่ระบบเงิน)
+////////////////////////////////////////////////////
+class LightTower : public Tower {
+    float& playerMoney; // อ้างอิงเงินใน Game.cpp
+public:
+    LightTower(Vector2D pos, SDL_Texture* tex, float& money) 
+        : Tower(pos, tex), playerMoney(money) {
+        attackSpeed = 20.0f; // เจนเงินทุก 20 วิ
+    }
+    void updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies) override;
+};
+
+////////////////////////////////////////////////////
+// 3. LIGHTNING TOWER (ชิ่ง 3 ตัว)
+////////////////////////////////////////////////////
+class LightningTower : public Tower {
+public:
+    LightningTower(Vector2D pos, SDL_Texture* p_texture, SDL_Texture* p_projectile_texture) : Tower(pos, p_texture, p_projectile_texture) {
+        damage = 15.0f; 
+        range = 130.0f; 
+        attackSpeed = 1.5f;
+    }
+    void updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies) override;
+};
+
+////////////////////////////////////////////////////
+// 4. WATER TOWER (สโลว์พื้น)
+////////////////////////////////////////////////////
+class WaterTower : public Tower {
+public:
+    WaterTower(Vector2D pos, SDL_Texture* p_texture, SDL_Texture* p_projectile_texture) : Tower(pos, p_texture, p_projectile_texture) {
+        damage = 0.0f;
+        range = 150.0f;
+        attackSpeed = 2.5f;}
     void updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies) override;
 };

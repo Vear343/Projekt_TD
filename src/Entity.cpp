@@ -3,6 +3,14 @@
 Entity::Entity(float p_x, float p_y, float p_width, float p_height, SDL_Texture* p_texture)
     : x(p_x), y(p_y), width(p_width), height(p_height), texture(p_texture)
 {
+    // ถ้า texture มีขนาดไม่ตรงกับ width/height ที่กำหนดไว้ ให้ปรับ currentFrame ให้ตรงกับขนาดของ texture
+    int texW, texH;
+    if (texture) {
+        SDL_QueryTexture(texture, NULL, NULL, &texW, &texH);
+    } else {
+        texW = static_cast<int>(p_width);
+        texH = static_cast<int>(p_height);
+    }
     // ตั้งค่า Source Rect (สมมติว่าใช้ทั้งรูปภาพเป็น 1 Frame)
     currentFrame.x = 0;
     currentFrame.y = 0;
@@ -12,8 +20,8 @@ Entity::Entity(float p_x, float p_y, float p_width, float p_height, SDL_Texture*
     // ตั้งค่า Collider ให้ตรงกับตำแหน่งวัตถุ
     collider.x = static_cast<int>(p_x);
     collider.y = static_cast<int>(p_y);
-    collider.w = static_cast<int>(p_width);
-    collider.h = static_cast<int>(p_height);
+    collider.w = texW;
+    collider.h = texH;
 }
 
 void Entity::render(SDL_Renderer* renderer) {

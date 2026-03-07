@@ -57,27 +57,29 @@ void RenderWindow::drawTextureFull(SDL_Texture* tex)
     SDL_RenderCopy(renderer, tex, NULL, &dest);
 }
 
-// Render a texture to the window
+// Render a texture to the window at entity size
 void RenderWindow::render(Entity& p_entity)
 {
-    // Define the source rectangle for rendering the texture
-    SDL_Rect src;
-    // Start at the top-left corner of the texture
-    src.x = 0;
-    src.y = 0;
-    // texture pixels width and height
-    src.w = p_entity.getCurrentFrame().w; 
-    src.h = p_entity.getCurrentFrame().h;
+    SDL_Texture* texture = p_entity.getTexture();
 
+    // If entity has no texture, skip rendering
+    if (!texture) return;
+
+    // Query actual texture dimensions for source rectangle
+    int texWidth, texHeight;
+    SDL_QueryTexture(texture, NULL, NULL, &texWidth, &texHeight);
+
+    // Define the source rectangle (use full texture)
+    SDL_Rect src = { 0, 0, texWidth, texHeight };
+
+    // Define the destination rectangle (use entity's specified size)
     SDL_Rect dst;
-    // position on the window
-    dst.x = p_entity.getX() - (src.w / 2); // Center the texture on the x-axis
-    dst.y = p_entity.getY() - (src.h / 2); // Center the texture on the y-axis
-    // size of the rendered texture on the window
-    dst.w = p_entity.getCurrentFrame().w;
-    dst.h = p_entity.getCurrentFrame().h;
+    dst.x = (int)(p_entity.getX() - (p_entity.getWidth() / 2.0f));  // Center on x-axis
+    dst.y = (int)(p_entity.getY() - (p_entity.getHeight() / 2.0f)); // Center on y-axis
+    dst.w = (int)p_entity.getWidth();   // Use entity's width
+    dst.h = (int)p_entity.getHeight();  // Use entity's height
 
-    SDL_RenderCopy(renderer, p_entity.getTexture(), &src, &dst);
+    SDL_RenderCopy(renderer, texture, &src, &dst);
 }
 
 // Present the rendered content to the screen

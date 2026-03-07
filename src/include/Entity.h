@@ -33,6 +33,6 @@ protected:
     float x, y;
     float width, height;
     SDL_Rect collider;
-    SDL_Rect currentFrame; // สำหรับจัดการ Sprite Sheet (ถ้ามี)
+    SDL_Rect currentFrame;
     SDL_Texture* texture;
 };
