@@ -21,8 +21,8 @@ Enemy::Enemy(float p_x, float p_y, SDL_Texture* p_texture, const std::vector<Vec
 {
     collider.w = 64;
     collider.h = 64;
-    collider.x = static_cast<int>(x);
-    collider.y = static_cast<int>(y);
+    collider.x = static_cast<int>(p_x - (collider.w / 2));
+    collider.y = static_cast<int>(p_y - (collider.h / 2));
 }
 
 void Enemy::update(float deltaTime) {
@@ -82,8 +82,8 @@ void Enemy::update(float deltaTime) {
     x += (direction.x / distance) * speed * speedMultiplier * deltaTime;
     y += (direction.y / distance) * speed * speedMultiplier * deltaTime;
 
-    collider.x = static_cast<int>(x);
-    collider.y = static_cast<int>(y);
+    collider.x = static_cast<int>(x - (collider.w / 2));
+    collider.y = static_cast<int>(y - (collider.h / 2));
 }
 
 void Enemy::takeDamage(float dmg) {

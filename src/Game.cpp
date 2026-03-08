@@ -27,12 +27,12 @@ bool Game::init() {
     bgTex = window->loadTexture("assets/Sky_01.png");
 
     // Load Towers
-    fireTowerTex      = window->loadTexture("assets/Fire_Tower.png");
-    iceTowerTex       = window->loadTexture("assets/Ice_Tower.png");
-    windTowerTex      = window->loadTexture("assets/Wind_Tower.png");
-    lightTowerTex     = window->loadTexture("assets/Light_Tower.png");
-    lightningTowerTex = window->loadTexture("assets/Lightning_Tower.png");
-    waterTowerTex     = window->loadTexture("assets/Water_Tower.png");
+    fireTowerTexture      = window->loadTexture("assets/Fire_Tower.png");
+    iceTowerTexture       = window->loadTexture("assets/Ice_Tower.png");
+    windTowerTexture      = window->loadTexture("assets/Wind_Tower.png");
+    lightTowerTexture     = window->loadTexture("assets/Light_Tower.png");
+    lightningTowerTexture = window->loadTexture("assets/Lightning_Tower.png");
+    waterTowerTexture     = window->loadTexture("assets/Water_Tower.png");
     
     // Load projectile textures
     fireProjectileTexture = window->loadTexture("assets/Fire_Ball.png");
@@ -53,12 +53,10 @@ bool Game::init() {
     waterIconTex = window->loadTexture("assets/Water_Tower.png");
 
     path = {
-        level.gridToWorld(0,0),
-        level.gridToWorld(10,0),
-        level.gridToWorld(10,10),
-        level.gridToWorld(20,10),
-        level.gridToWorld(20,20),
-        level.gridToWorld(30,40),
+        level.gridToWorld(0, 8),
+        level.gridToWorld(5, 8),
+        level.gridToWorld(5, 3),
+        level.gridToWorld(10, 3),
     };
 
     lastTime = SDL_GetPerformanceCounter();
@@ -100,6 +98,11 @@ void Game::handleEvents() {
         } else if (currentState == GameState::Playing) {
             if (event.type == SDL_KEYDOWN) {
                 if (event.key.keysym.sym == SDLK_n) startNextWave(); // กด N เพื่อเริ่ม/ข้าม Wave
+                else if (event.key.keysym.sym == SDLK_c) {
+                    // toggle collider drawing
+                    bool current = window->isDrawColliders();
+                    window->setDrawColliders(!current);
+                }
             }
 
             if (event.type == SDL_MOUSEMOTION) {
@@ -127,12 +130,12 @@ void Game::handleEvents() {
                         int gx, gy;
                         if (level.worldToGrid(mpos, gx, gy) && level.isEmpty(gx, gy)) {
                             Vector2D world = level.gridToWorld(gx, gy);
-                            if      (selectedType == TowerType::Fire)      towers.push_back(std::make_unique<FireTower>(world, fireTowerTex, fireProjectileTexture));
-                            else if (selectedType == TowerType::Ice)       towers.push_back(std::make_unique<IceTower>(world, iceTowerTex, iceProjectileTexture));
-                            else if (selectedType == TowerType::Wind)      towers.push_back(std::make_unique<WindTower>(world, windTowerTex, windProjectileTexture));
-                            else if (selectedType == TowerType::Light)     towers.push_back(std::make_unique<LightTower>(world, lightTowerTex, gold));
-                            else if (selectedType == TowerType::Lightning) towers.push_back(std::make_unique<LightningTower>(world, lightningTowerTex, lightningProjectileTexture));
-                            else if (selectedType == TowerType::Water)     towers.push_back(std::make_unique<WaterTower>(world, waterTowerTex, waterProjectileTexture));
+                            if      (selectedType == TowerType::Fire)      towers.push_back(std::make_unique<FireTower>(world, fireTowerTexture, fireProjectileTexture));
+                            else if (selectedType == TowerType::Ice)       towers.push_back(std::make_unique<IceTower>(world, iceTowerTexture, iceProjectileTexture));
+                            else if (selectedType == TowerType::Wind)      towers.push_back(std::make_unique<WindTower>(world, windTowerTexture, windProjectileTexture));
+                            else if (selectedType == TowerType::Light)     towers.push_back(std::make_unique<LightTower>(world, lightTowerTexture, gold));
+                            else if (selectedType == TowerType::Lightning) towers.push_back(std::make_unique<LightningTower>(world, lightningTowerTexture, lightningProjectileTexture));
+                            else if (selectedType == TowerType::Water)     towers.push_back(std::make_unique<WaterTower>(world, waterTowerTexture, waterProjectileTexture));
 
                             level.setTile(gx, gy, Level::TOWER);
                             selectedType = TowerType::None;
@@ -214,7 +217,7 @@ void Game::render() {
 
         // Render enemies and towers
         for (auto& enemy : enemies) window->render(*enemy);
-        for (auto& tower : towers) tower->render(window->getRenderer());
+        for (auto& tower : towers) window->render(*tower);
 
         
         // Render projectiles from all towers

@@ -5,10 +5,10 @@ Projectile::Projectile(float p_x, float p_y, SDL_Texture* p_texture, Enemy* p_ta
 {
     target = p_target;
     effect = p_effect;
-    collider.x = p_x;
-    collider.y = p_y;
     collider.w = width;
     collider.h = height;
+    collider.x = p_x - (width / 2);
+    collider.y = p_y - (height / 2);
 }
 
 void Projectile::update(float deltatime){
@@ -26,10 +26,10 @@ void Projectile::update(float deltatime){
     float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
 
     // Update collider position to match projectile's current location
-    collider.x = static_cast<int>(x);
-    collider.y = static_cast<int>(y);
-    collider.w = 16;
-    collider.h = 16;
+    collider.x = static_cast<int>(x - (width / 2));
+    collider.y = static_cast<int>(y - (height / 2));
+    collider.w = width;
+    collider.h = height;
 
     // Check collision - if projectile hitbox intersects with enemy hitbox
     SDL_Rect enemyCollider = target->getCollider();

@@ -27,12 +27,12 @@ public:
     
     // Virtual functions ที่ลูกหลานต้องเอาไปเขียนต่อ
     virtual void update(float deltaTime) = 0; 
-    virtual void render(SDL_Renderer* renderer);
+    // virtual void render(SDL_Renderer* renderer);
     
 protected:
     float x, y;
     float width, height;
     SDL_Rect collider;
-    SDL_Rect currentFrame;
+    SDL_Rect currentFrame; // สำหรับอนิเมชันในอนาคต
     SDL_Texture* texture;
 };

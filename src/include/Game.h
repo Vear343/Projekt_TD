@@ -39,6 +39,12 @@ private:
     float spawnDelay;
     bool waveActive;
 
+    // Game Objects
+    std::vector<Vector2D> path;
+    std::vector<std::unique_ptr<Tower>> towers;
+    std::vector<std::unique_ptr<Enemy>> enemies;
+    std::vector<std::unique_ptr<Projectile>> projectiles;
+
     // Textures
     SDL_Texture* menuTex;
     SDL_Texture* playButtonTexture;
@@ -57,12 +63,6 @@ private:
     SDL_Texture* lightningProjectileTexture = nullptr;
     SDL_Texture* waterProjectileTexture = nullptr;
 
-    // Game Objects
-    std::vector<Vector2D> path;
-    std::vector<std::unique_ptr<Tower>> towers;
-    std::vector<std::unique_ptr<Enemy>> enemies;
-    std::vector<std::unique_ptr<Projectile>> projectiles;
-
     // UI Icons
     SDL_Texture* fireIconTex;
     SDL_Texture* iceIconTex;
@@ -71,12 +71,8 @@ private:
     SDL_Texture* lightningIconTex;
     SDL_Texture* waterIconTex;
 
-    SDL_Texture* fireTowerTex;
-    SDL_Texture* iceTowerTex;
-    SDL_Texture* windTowerTex;
-    SDL_Texture* lightTowerTex;
-    SDL_Texture* lightningTowerTex;
-    SDL_Texture* waterTowerTex;
+    bool setDrawColliders = false; // สำหรับเปิด/ปิดการวาด collider ใน RenderWindow
+    
 
     SDL_Event event;
     Uint64 lastTime;
