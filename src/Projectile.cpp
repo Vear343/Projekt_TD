@@ -7,8 +7,6 @@ Projectile::Projectile(float p_x, float p_y, SDL_Texture* p_texture, Enemy* p_ta
     effect = p_effect;
     collider.w = width;
     collider.h = height;
-    collider.x = p_x - (width / 2);
-    collider.y = p_y - (height / 2);
 }
 
 void Projectile::update(float deltatime){

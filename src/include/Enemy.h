@@ -26,8 +26,7 @@ public:
     // Helper functions สำหรับ Tower/Projectile
     float getX() const { return x; }
     float getY() const { return y; }
-    Vector2D getCenter() { return Vector2D(x + 32, y + 32); }
-    SDL_Rect getCollider() { return collider; }
+    Vector2D getCenter() { return Vector2D(x, y); }
 
 private:
     std::vector<Vector2D> path;

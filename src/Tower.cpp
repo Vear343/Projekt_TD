@@ -4,9 +4,12 @@
 #include <iostream>
 
 Tower::Tower(Vector2D pos, SDL_Texture* p_texture, SDL_Texture* p_projectile_texture)
-    : Entity(pos.x, pos.y, 32, 32, p_texture), // กำหนดขนาดเริ่มต้น 32x32
+    : Entity(pos.x, pos.y, 64, 64, p_texture), // กำหนดขนาดเริ่มต้น 32x32
       damage(0), range(0), attackSpeed(0), cooldown(0), projectileTexture(p_projectile_texture)
-{}
+{
+    collider.w = static_cast<int>(width);
+    collider.h = static_cast<int>(height);
+}
 
 void Tower::render(SDL_Renderer* renderer) {
     // If tower has no texture, skip rendering
@@ -36,8 +39,8 @@ Enemy* Tower::findTarget(std::vector<std::unique_ptr<Enemy>>& enemies) {
     for (auto& enemy : enemies) {
         if (!enemy->isAlive()) continue;
 
-        float dx = (x + width/2) - enemy->getX();
-        float dy = (y + height/2) - enemy->getY();
+        float dx = x - enemy->getX();
+        float dy = y - enemy->getY();
         float distSq = dx*dx + dy*dy;
 
         if (distSq <= closestDistSq) {
@@ -55,8 +58,8 @@ void FireTower::updateTower(float deltatime, std::vector<std::unique_ptr<Enemy>>
         Enemy* target = findTarget(enemies);
         if (target) {
             projectiles.push_back(std::make_unique<Projectile>(
-                x + width/2, 
-                y + height/2, 
+                x, 
+                y, 
                 projectileTexture, 
                 target,
                 ProjectileEffect::BURN
@@ -81,8 +84,8 @@ void IceTower::updateTower(float deltatime, std::vector<std::unique_ptr<Enemy>>&
         Enemy* target = findTarget(enemies);
         if (target) {
             projectiles.push_back(std::make_unique<Projectile>(
-                x + width/2, 
-                y + height/2, 
+                x, 
+                y, 
                 projectileTexture, 
                 target,
                 ProjectileEffect::STUNT
@@ -120,7 +123,7 @@ void LightTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enem
     if (cooldown <= 0) {
         playerMoney += 50.0f; // เพิ่มเงิน 50 ทุก 20 วิ
         cooldown = attackSpeed;
-        std::cout << "Generated Money! Current: " << playerMoney << std::endl;
+        std::cout << "Light Tower generated 50 gold, Current: " << playerMoney << std::endl;
     }
 }
 void LightningTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies) {

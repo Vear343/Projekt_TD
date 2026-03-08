@@ -23,7 +23,7 @@ bool Game::init() {
     window = new RenderWindow("Tower Defense | Press 'N' for Next Wave", 1280, 720);
 
     // โหลด Texture ทั้งหมด
-    enemyTex = window->loadTexture("assets/Enemy_Beta.png");
+    enemyTex = window->loadTexture("assets/Enemy_Beta2.png");
     bgTex = window->loadTexture("assets/Sky_01.png");
 
     // Load Towers
@@ -171,19 +171,25 @@ void Game::update(float deltaTime) {
         }
     }
 
-    // 2. อัปเดตมอนสเตอร์และเช็คการตาย
+    // 2. อัปเดตมอนสเตอร์
     for (auto& enemy : enemies) {
         enemy->update(deltaTime);
+    }
+
+    // Update towers (projectiles may kill enemies)
+    for (auto& tower : towers) tower->updateTower(deltaTime, enemies);
+
+    // 3. เช็คการตายและให้รางวัล (AFTER towers attack, so projectile kills are detected)
+    for (auto& enemy : enemies) {
         // ถ้ามอนตาย (isAlive เป็น false) และยังไม่ได้ให้รางวัล
         if (!enemy->isAlive() && !enemy->isRewardGiven()) {
+            std::cout << "Enemy killed! +50 gold, Current: " << gold << std::endl;
             gold += 50.0f; // สังหารได้เงิน 50
             enemy->setRewardGiven(true);
         }
     }
 
-    for (auto& tower : towers) tower->updateTower(deltaTime, enemies);
-
-    // 3. แสดงผล Gold บน Window Title แบบ Real-time
+    // 4. แสดงผล Gold บน Window Title แบบ Real-time
     std::string title = "Tower Defense | Gold: " + std::to_string((int)gold) + 
                         " | Wave: " + std::to_string(currentWave) + 
                         " | Enemies: " + std::to_string(enemies.size());
