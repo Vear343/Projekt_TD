@@ -27,17 +27,17 @@ public:
     
     // ฟังก์ชันจัดการ Wave
     void startNextWave();
+    bool isWaveFinished() const { return enemiesToSpawnInWave == 0 && enemies.empty(); }
 
 private:
     bool running;
     float gold;
-    static constexpr float TOWER_BUY_COST = 50.0f;
-    static constexpr float TOWER_SELL_REFUND = 25.0f;
+    int playerHealth;
     RenderWindow* window;
     Level level;
     
     // ระบบ Wave
-    int currentWave;
+    int currentWave = 0;
     int enemiesToSpawnInWave;
     float spawnTimer;
     float spawnDelay;
@@ -53,6 +53,7 @@ private:
     SDL_Texture* menuTex;
     SDL_Texture* playButtonTexture;
     SDL_Texture* enemyTex;
+    SDL_Texture* bossTex;
     SDL_Texture* bgTex;
     SDL_Texture* fireTowerTexture = nullptr;
     SDL_Texture* iceTowerTexture = nullptr;
@@ -85,6 +86,6 @@ private:
     TowerType selectedType = TowerType::None;
     Vector2D mousePos;
 
-    enum class GameState { Menu, Playing };
+    enum class GameState { Menu, Playing, GameOver };
     GameState currentState;
 };

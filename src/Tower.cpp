@@ -42,7 +42,7 @@ void Tower::updateProjectiles(float dt) {
         projectiles.end());
 }
 
-void FireTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies) {
+void FireTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies, bool waveActive) {
     if (cooldown > 0) cooldown -= dt;
 
     if (cooldown <= 0) {
@@ -65,13 +65,10 @@ void FireTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemi
     for (auto& p : projectiles)
         p->update(dt);
 
-    projectiles.erase(
-        std::remove_if(projectiles.begin(), projectiles.end(),
-        [](const std::unique_ptr<Projectile>& p) { return p->hasHit(); }),
-        projectiles.end());
+    updateProjectiles(dt);
 }
 
-void IceTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies) {
+void IceTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies, bool waveActive) {
     if (cooldown > 0) cooldown -= dt;
 
     if (cooldown <= 0) {
@@ -94,13 +91,10 @@ void IceTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemie
     for (auto& p : projectiles)
         p->update(dt);
 
-    projectiles.erase(
-        std::remove_if(projectiles.begin(), projectiles.end(),
-        [](const std::unique_ptr<Projectile>& p) { return p->hasHit(); }),
-        projectiles.end());
+    updateProjectiles(dt);
 }
 
-void WindTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies) {
+void WindTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies, bool waveActive) {
     cooldown -= dt;
 
     if (cooldown <= 0) {
@@ -115,19 +109,20 @@ void WindTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemi
     }
 }
 
-void LightTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies) {
+void LightTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies, bool waveActive) {
+    if (!waveActive) return;
+
     cooldown -= dt;
 
     if (cooldown <= 0) {
         playerMoney += 50.0f;
         cooldown = attackSpeed;
 
-        std::cout << "Light Tower generated 50 gold, Current: "
-                  << playerMoney << std::endl;
+        std::cout << "Light Tower generated 50 gold, Current: " << playerMoney << std::endl;
     }
 }
 
-void LightningTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies) {
+void LightningTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies, bool waveActive) {
     cooldown -= dt;
 
     if (cooldown <= 0) {
@@ -149,16 +144,26 @@ void LightningTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& 
     }
 }
 
-void WaterTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies) {
+void WaterTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies, bool waveActive) {
     cooldown -= dt;
 
     if (cooldown <= 0) {
-        for (auto& enemy : enemies) {
-            if ((getCenter() - enemy->getCenter()).length() <= range) {
-                enemy->applySlow(0.5f, 2.0f);
-                cooldown = attackSpeed;
-                break;
-            }
+        Enemy* target = findTarget(enemies);
+
+        if (target) {
+            projectiles.push_back(std::make_unique<Projectile>(
+                x,
+                y,
+                projectileTexture,
+                target,
+                ProjectileEffect::SLOW
+            ));
+
+            cooldown = attackSpeed;
         }
     }
+    for (auto& p : projectiles)
+        p->update(dt);
+
+    updateProjectiles(dt);
 }

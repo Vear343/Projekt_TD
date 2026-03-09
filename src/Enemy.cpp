@@ -1,13 +1,16 @@
 #include "Enemy.h"
 #include <cmath>
+#include <iostream>
 #include <algorithm>
 
 Enemy::Enemy(float p_x, float p_y, SDL_Texture* p_texture, const std::vector<Vector2D>& p_path)
     : Entity(p_x, p_y, 64, 64, p_texture), 
       path(p_path), 
       currentPathIndex(0), 
-      hp(100.0f),
-      speed(50.0f),
+      reward(50),
+      maxHp(100.0f),
+      hp(maxHp),
+      speed(30.0f),
       alive(true), 
       finished(false),
       rewardGiven(false),
@@ -23,6 +26,38 @@ Enemy::Enemy(float p_x, float p_y, SDL_Texture* p_texture, const std::vector<Vec
     collider.h = 32;
 }
 
+void Enemy::renderHpbar(SDL_Renderer* renderer)
+{
+    SDL_Rect dest = {(int)x, (int)y, (int)width, (int)height};
+
+    // Draw enemy
+    SDL_RenderCopy(renderer, texture, &currentFrame, &dest);
+
+    // HP bar settings
+    int barWidth = width;
+    int barHeight = 6;
+
+    int barX = (int)(x - width / 2);
+    int barY = (int)(y - height / 2 - 10);
+
+    float hpPercent = hp / maxHp;
+
+    SDL_Rect bgBar = {barX, barY, barWidth, barHeight};
+    SDL_Rect hpBar = {barX, barY, (int)(barWidth * hpPercent), barHeight};
+
+    // background
+    SDL_SetRenderDrawColor(renderer, 80, 80, 80, 255);
+    SDL_RenderFillRect(renderer, &bgBar);
+
+    // HP
+    SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+    SDL_RenderFillRect(renderer, &hpBar);
+
+    // border
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderDrawRect(renderer, &bgBar);
+}
+
 void Enemy::update(float deltaTime) {
     // Check if enemy is dead - end movement and updates
     if (hp <= 0) {
@@ -34,6 +69,10 @@ void Enemy::update(float deltaTime) {
     if (finished) return;
 
     // 1. Status Effects
+    if (stunCooldown > 0) {
+        stunCooldown -= deltaTime;
+    }
+
     if (stunTimer > 0) {
         stunTimer -= deltaTime;
         SDL_SetTextureColorMod(texture, 150, 150, 255);
@@ -103,7 +142,10 @@ void Enemy::applySlow(float speedModifier, float duration) {
 }
 
 void Enemy::applyStunt(float duration) {
+    if (stunCooldown > 0) return; // ยังอยู่ในช่วง Cooldown ของ Stun
+
     stunTimer = std::max(stunTimer, duration);
+    stunCooldown = 6.0f; // เริ่ม Cooldown ทันทีหลังจากถูก Stun
 }
 
 void Enemy::applyBurn(float dmg, float duration) {

@@ -8,6 +8,7 @@ class Enemy : public Entity { // ต้องสืบทอดจาก Entity
 public:
     Enemy(float p_x, float p_y, SDL_Texture* p_tex, const std::vector<Vector2D>& p_path);
 
+    void renderHpbar(SDL_Renderer* renderer);
     void update(float deltaTime);
     void takeDamage(float amount);
     void applyStunt(float duration);
@@ -16,7 +17,9 @@ public:
     void pushBack(float distance);
     // Getters
     float getHp() const { return hp; }
-    void setHp(float p_hp) { hp = p_hp; }
+    int getReward() const { return reward; }
+    void setreward(int r) { reward = r; }
+    void setMaxHp(float p_hp) { maxHp = p_hp; hp = p_hp; }
     void setSpeed(float p_speed) { speed = p_speed; }
     bool isAlive() const { return hp > 0; }
     bool hasFinished() const { return finished; }
@@ -33,6 +36,8 @@ private:
     int currentPathIndex;
     SDL_Rect collider;
 
+    int reward;
+    float maxHp;
     float hp;
     float speed;
     bool alive;
@@ -42,9 +47,22 @@ private:
 
     // Status Timers
     float stunTimer;
+    float stunCooldown;
     float burnTimer;
     float burnTickTimer;
     float burnDamagePerSec;
     float slowTimer;
     float speedMultiplier;
+};
+
+class BossEnemy : public Enemy {
+public:
+    BossEnemy(float p_x, float p_y, SDL_Texture* p_texture, const std::vector<Vector2D>& p_path)
+    : Enemy(p_x, p_y, p_texture, p_path) {
+    setMaxHp(800.0f);
+    setSpeed(10.0f);
+    setreward(500);
+    width = 96;
+    height = 96;
+    }
 };

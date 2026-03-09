@@ -1,270 +1,270 @@
-#include <iostream>
-#include <vector>
-#include <cmath>
-#include <SDL2/SDL.h>
+// #include <iostream>
+// #include <vector>
+// #include <cmath>
+// #include <SDL2/SDL.h>
 
-#define MAP_WIDTH 10
-#define MAP_HEIGHT 10
+// #define MAP_WIDTH 10
+// #define MAP_HEIGHT 10
 
-const int tileWidth = 64;
-const int tileHeight = 32;
+// const int tileWidth = 64;
+// const int tileHeight = 32;
 
-// ราคาป้อม
-const int TOWER_COST = 50;
-const int TOWER_SELL = 25;
+// // ราคาป้อม
+// const int TOWER_COST = 50;
+// const int TOWER_SELL = 25;
 
-//////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////
 
-struct Vector2 {
-    float x, y;
-};
+// struct Vector2 {
+//     float x, y;
+// };
 
-//////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////
 
-enum TileType {
-    EMPTY,
-    PATH,
-    OCCUPIED
-};
+// enum TileType {
+//     EMPTY,
+//     PATH,
+//     OCCUPIED
+// };
 
-struct Tile {
-    TileType type = EMPTY;
-    bool buildable = true;
-};
+// struct Tile {
+//     TileType type = EMPTY;
+//     bool buildable = true;
+// };
 
-Tile mapGrid[MAP_WIDTH][MAP_HEIGHT];
+// Tile mapGrid[MAP_WIDTH][MAP_HEIGHT];
 
-//////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////
 
-class Tower {
-private:
-    int gridX, gridY;
-    Vector2 worldPos;
-    float rotation;
+// class Tower {
+// private:
+//     int gridX, gridY;
+//     Vector2 worldPos;
+//     float rotation;
 
-public:
+// public:
 
-    Tower(int gx, int gy) {
-        setGridPosition(gx, gy);
-        rotation = 0;
-    }
+//     Tower(int gx, int gy) {
+//         setGridPosition(gx, gy);
+//         rotation = 0;
+//     }
 
-    void setGridPosition(int gx, int gy) {
+//     void setGridPosition(int gx, int gy) {
 
-        gridX = gx;
-        gridY = gy;
+//         gridX = gx;
+//         gridY = gy;
 
-        worldPos.x = (gx - gy) * tileWidth / 2.0f;
-        worldPos.y = (gx + gy) * tileHeight / 2.0f;
-    }
+//         worldPos.x = (gx - gy) * tileWidth / 2.0f;
+//         worldPos.y = (gx + gy) * tileHeight / 2.0f;
+//     }
 
-    void rotateTo(Vector2 target) {
+//     void rotateTo(Vector2 target) {
 
-        float dx = target.x - worldPos.x;
-        float dy = target.y - worldPos.y;
+//         float dx = target.x - worldPos.x;
+//         float dy = target.y - worldPos.y;
 
-        rotation = atan2(dy, dx) * 180.0f / 3.14159f;
-    }
+//         rotation = atan2(dy, dx) * 180.0f / 3.14159f;
+//     }
 
-    bool isClicked(Vector2 mousePos) {
+//     bool isClicked(Vector2 mousePos) {
 
-        float dx = mousePos.x - worldPos.x;
-        float dy = mousePos.y - worldPos.y;
+//         float dx = mousePos.x - worldPos.x;
+//         float dy = mousePos.y - worldPos.y;
 
-        float dist = sqrt(dx * dx + dy * dy);
+//         float dist = sqrt(dx * dx + dy * dy);
 
-        return dist < 40;
-    }
+//         return dist < 40;
+//     }
 
-    int getGridX() { return gridX; }
-    int getGridY() { return gridY; }
+//     int getGridX() { return gridX; }
+//     int getGridY() { return gridY; }
 
-    void render() {
+//     void render() {
 
-        std::cout << "Tower at (" << gridX << "," << gridY
-                  << ") Rot: " << rotation << "\n";
-    }
-};
+//         std::cout << "Tower at (" << gridX << "," << gridY
+//                   << ") Rot: " << rotation << "\n";
+//     }
+// };
 
-//////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////
 
-std::vector<Tower*> towers;
+// std::vector<Tower*> towers;
 
-int playerMoney = 200;
+// int playerMoney = 200;
 
-bool buyingTower = false;
+// bool buyingTower = false;
 
-Uint32 lastClickTime = 0;
+// Uint32 lastClickTime = 0;
 
-//////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////
 
-Vector2 screenToGrid(float screenX, float screenY) {
+// Vector2 screenToGrid(float screenX, float screenY) {
 
-    float gx = (screenY / tileHeight + screenX / tileWidth);
-    float gy = (screenY / tileHeight - screenX / tileWidth);
+//     float gx = (screenY / tileHeight + screenX / tileWidth);
+//     float gy = (screenY / tileHeight - screenX / tileWidth);
 
-    return { floor(gx), floor(gy) };
-}
+//     return { floor(gx), floor(gy) };
+// }
 
-//////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////
 
-bool canPlace(int x, int y) {
+// bool canPlace(int x, int y) {
 
-    if (x < 0 || y < 0 || x >= MAP_WIDTH || y >= MAP_HEIGHT)
-        return false;
+//     if (x < 0 || y < 0 || x >= MAP_WIDTH || y >= MAP_HEIGHT)
+//         return false;
 
-    if (mapGrid[x][y].type != EMPTY)
-        return false;
+//     if (mapGrid[x][y].type != EMPTY)
+//         return false;
 
-    if (!mapGrid[x][y].buildable)
-        return false;
+//     if (!mapGrid[x][y].buildable)
+//         return false;
 
-    return true;
-}
+//     return true;
+// }
 
-//////////////////////////////////////////////////////////////
-// BUY TOWER
+// //////////////////////////////////////////////////////////////
+// // BUY TOWER
 
-void buyTower() {
+// void buyTower() {
 
-    if (playerMoney < TOWER_COST) {
-        std::cout << "Not enough money\n";
-        return;
-    }
+//     if (playerMoney < TOWER_COST) {
+//         std::cout << "Not enough money\n";
+//         return;
+//     }
 
-    buyingTower = true;
+//     buyingTower = true;
 
-    std::cout << "Click map to place tower\n";
-}
+//     std::cout << "Click map to place tower\n";
+// }
 
-//////////////////////////////////////////////////////////////
-// PLACE TOWER
+// //////////////////////////////////////////////////////////////
+// // PLACE TOWER
 
-void placeTower(int x, int y) {
+// void placeTower(int x, int y) {
 
-    if (!canPlace(x, y)) {
-        std::cout << "Cannot place here\n";
-        return;
-    }
+//     if (!canPlace(x, y)) {
+//         std::cout << "Cannot place here\n";
+//         return;
+//     }
 
-    if (playerMoney < TOWER_COST) {
-        std::cout << "Not enough money\n";
-        return;
-    }
+//     if (playerMoney < TOWER_COST) {
+//         std::cout << "Not enough money\n";
+//         return;
+//     }
 
-    Tower* tower = new Tower(x, y);
+//     Tower* tower = new Tower(x, y);
 
-    towers.push_back(tower);
+//     towers.push_back(tower);
 
-    mapGrid[x][y].type = OCCUPIED;
+//     mapGrid[x][y].type = OCCUPIED;
 
-    playerMoney -= TOWER_COST;
+//     playerMoney -= TOWER_COST;
 
-    buyingTower = false;
+//     buyingTower = false;
 
-    std::cout << "Tower placed at " << x << "," << y
-              << " Money: " << playerMoney << "\n";
-}
+//     std::cout << "Tower placed at " << x << "," << y
+//               << " Money: " << playerMoney << "\n";
+// }
 
-//////////////////////////////////////////////////////////////
-// SELL TOWER
+// //////////////////////////////////////////////////////////////
+// // SELL TOWER
 
-void sellTower(int index) {
+// void sellTower(int index) {
 
-    Tower* tower = towers[index];
+//     Tower* tower = towers[index];
 
-    int x = tower->getGridX();
-    int y = tower->getGridY();
+//     int x = tower->getGridX();
+//     int y = tower->getGridY();
 
-    mapGrid[x][y].type = EMPTY;
+//     mapGrid[x][y].type = EMPTY;
 
-    playerMoney += TOWER_SELL;
+//     playerMoney += TOWER_SELL;
 
-    delete tower;
+//     delete tower;
 
-    towers.erase(towers.begin() + index);
+//     towers.erase(towers.begin() + index);
 
-    std::cout << "Tower sold! Money: " << playerMoney << "\n";
-}
+//     std::cout << "Tower sold! Money: " << playerMoney << "\n";
+// }
 
-//////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////
 
-int main(int argc, char* argv[]) {
+// int main(int argc, char* argv[]) {
 
-    SDL_Init(SDL_INIT_VIDEO);
+//     SDL_Init(SDL_INIT_VIDEO);
 
-    SDL_Window* window = SDL_CreateWindow(
-        "Tower Defense",
-        SDL_WINDOWPOS_CENTERED,
-        SDL_WINDOWPOS_CENTERED,
-        800,
-        600,
-        0
-    );
+//     SDL_Window* window = SDL_CreateWindow(
+//         "Tower Defense",
+//         SDL_WINDOWPOS_CENTERED,
+//         SDL_WINDOWPOS_CENTERED,
+//         800,
+//         600,
+//         0
+//     );
 
-    SDL_Event event;
+//     SDL_Event event;
 
-    bool running = true;
+//     bool running = true;
 
-    while (running) {
+//     while (running) {
 
-        while (SDL_PollEvent(&event)) {
+//         while (SDL_PollEvent(&event)) {
 
-            if (event.type == SDL_QUIT)
-                running = false;
+//             if (event.type == SDL_QUIT)
+//                 running = false;
 
-            // กด B เพื่อซื้อป้อม
-            if (event.type == SDL_KEYDOWN) {
+//             // กด B เพื่อซื้อป้อม
+//             if (event.type == SDL_KEYDOWN) {
 
-                if (event.key.keysym.sym == SDLK_b)
-                    buyTower();
-            }
+//                 if (event.key.keysym.sym == SDLK_b)
+//                     buyTower();
+//             }
 
-            // คลิกเมาส์
-            if (event.type == SDL_MOUSEBUTTONDOWN) {
+//             // คลิกเมาส์
+//             if (event.type == SDL_MOUSEBUTTONDOWN) {
 
-                float mouseX = event.button.x;
-                float mouseY = event.button.y;
+//                 float mouseX = event.button.x;
+//                 float mouseY = event.button.y;
 
-                Vector2 mousePos = { mouseX, mouseY };
+//                 Vector2 mousePos = { mouseX, mouseY };
 
-                Uint32 currentTime = SDL_GetTicks();
+//                 Uint32 currentTime = SDL_GetTicks();
 
-                // ตรวจขายป้อม (double click)
-                for (int i = 0; i < towers.size(); i++) {
+//                 // ตรวจขายป้อม (double click)
+//                 for (int i = 0; i < towers.size(); i++) {
 
-                    if (towers[i]->isClicked(mousePos)) {
+//                     if (towers[i]->isClicked(mousePos)) {
 
-                        if (currentTime - lastClickTime < 300) {
+//                         if (currentTime - lastClickTime < 300) {
 
-                            sellTower(i);
-                            break;
-                        }
+//                             sellTower(i);
+//                             break;
+//                         }
 
-                        lastClickTime = currentTime;
-                    }
-                }
+//                         lastClickTime = currentTime;
+//                     }
+//                 }
 
-                // วางป้อม
-                if (buyingTower) {
+//                 // วางป้อม
+//                 if (buyingTower) {
 
-                    Vector2 grid = screenToGrid(mouseX, mouseY);
+//                     Vector2 grid = screenToGrid(mouseX, mouseY);
 
-                    int gx = (int)grid.x;
-                    int gy = (int)grid.y;
+//                     int gx = (int)grid.x;
+//                     int gy = (int)grid.y;
 
-                    placeTower(gx, gy);
-                }
-            }
-        }
+//                     placeTower(gx, gy);
+//                 }
+//             }
+//         }
 
-        for (auto tower : towers)
-            tower->render();
-    }
+//         for (auto tower : towers)
+//             tower->render();
+//     }
 
-    SDL_DestroyWindow(window);
+//     SDL_DestroyWindow(window);
 
-    SDL_Quit();
+//     SDL_Quit();
 
-    return 0;
-}
+//     return 0;
+// }

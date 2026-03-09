@@ -3,9 +3,9 @@
 #include <iostream>
 
 Game::Game()
-    : running(false), gold(500.0f), window(nullptr), 
-      currentWave(0), enemiesToSpawnInWave(0), spawnTimer(0.0f), 
-      spawnDelay(1.0f), waveActive(false),
+    : running(false), gold(500.0f), playerHealth(20), window(nullptr),
+      currentWave(0), enemiesToSpawnInWave(0), spawnTimer(0.0f),
+      spawnDelay(1.5f), waveActive(false),
       enemyTex(nullptr), bgTex(nullptr), menuTex(nullptr),
       currentState(GameState::Menu)
 {
@@ -41,8 +41,13 @@ void Game::sellTowerAtIndex(int index) {
         level.setTile(gx, gy, Level::EMPTY);
     }
 
+    int sellPrice = towers[index]->getCost() * 0.6f;
+    gold += sellPrice;
+
+    std::cout << "Tower sold! Refund: " << sellPrice 
+              << " | Gold: " << gold << std::endl;
+
     towers.erase(towers.begin() + index);
-    gold += TOWER_SELL_REFUND;
 }
 
 bool Game::init() {
@@ -52,7 +57,8 @@ bool Game::init() {
     window = new RenderWindow("Tower Defense | Press 'N' for Next Wave", 1280, 720);
 
     // โหลด Texture ทั้งหมด
-    enemyTex = window->loadTexture("assets/Enemy_Beta2.png");
+    enemyTex = window->loadTexture("assets/Enemy.png");
+    bossTex = window->loadTexture("assets/Boss.png");
     bgTex = window->loadTexture("assets/Sky_01.png");
 
     // Load Towers
@@ -66,11 +72,10 @@ bool Game::init() {
     // Load projectile textures
     fireProjectileTexture = window->loadTexture("assets/Fire_Ball.png");
     iceProjectileTexture = window->loadTexture("assets/Ice_Ball.png");
-    // Missing projectile assets fallback to Fire_Ball to keep runtime stable.
-    windProjectileTexture = window->loadTexture("assets/Fire_Ball.png");
-    lightProjectileTexture = window->loadTexture("assets/Fire_Ball.png");
-    lightningProjectileTexture = window->loadTexture("assets/Fire_Ball.png");
-    waterProjectileTexture = window->loadTexture("assets/Fire_Ball.png");
+    windProjectileTexture = window->loadTexture("assets/Wind_Ball.png");
+    lightProjectileTexture = window->loadTexture("assets/Light_Ball.png");
+    lightningProjectileTexture = window->loadTexture("assets/Lightning_Ball.png");
+    waterProjectileTexture = window->loadTexture("assets/Water_Ball.png");
     menuTex = window->loadTexture("assets/Tower_Menu.png");
     playButtonTexture = window->loadTexture("assets/play_button.png");
     
@@ -83,10 +88,14 @@ bool Game::init() {
     waterIconTex = window->loadTexture("assets/Water_Tower.png");
 
     path = {
-        level.gridToWorld(0, 8),
-        level.gridToWorld(5, 8),
+        level.gridToWorld(0, 9),
+        level.gridToWorld(5, 9),
         level.gridToWorld(5, 3),
         level.gridToWorld(10, 3),
+        level.gridToWorld(10, 12),
+        level.gridToWorld(18, 12),
+        level.gridToWorld(18, 4),
+        level.gridToWorld(27, 4)
     };
 
     lastTime = SDL_GetPerformanceCounter();
@@ -102,7 +111,7 @@ void Game::startNextWave() {
 
     currentWave++;
     waveActive = true;
-    enemiesToSpawnInWave = 10; // มาเป็นชุด ชุดละ 10 ตัว
+    enemiesToSpawnInWave = 10 + currentWave * 5; // เพิ่มจำนวนมอนสเตอร์ในแต่ละ Wave
     spawnTimer = 0.0f;
     std::cout << "Wave " << currentWave << " Started!" << std::endl;
 }
@@ -112,6 +121,7 @@ void Game::handleEvents() {
         if (event.type == SDL_QUIT) running = false;
 
         if (currentState == GameState::Menu) {
+            enemies.clear();
             if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
                 Vector2D mpos((float)event.button.x, (float)event.button.y);
                 int winW = window->getwidth();
@@ -130,7 +140,7 @@ void Game::handleEvents() {
         if (currentState != GameState::Playing) continue;
 
         if (event.type == SDL_KEYDOWN) {
-            if (event.key.keysym.sym == SDLK_n) startNextWave();
+            if (event.key.keysym.sym == SDLK_n && isWaveFinished()) { startNextWave(); }
             else if (event.key.keysym.sym == SDLK_c) {
                 bool current = window->isDrawColliders();
                 window->setDrawColliders(!current);
@@ -181,23 +191,47 @@ void Game::handleEvents() {
         int gx, gy;
         if (!level.worldToGrid(mpos, gx, gy) || !level.isEmpty(gx, gy)) continue;
 
-        if (gold < TOWER_BUY_COST) {
-            std::cout << "Not enough gold. Need " << TOWER_BUY_COST << std::endl;
-            selectedType = TowerType::None;
-            continue;
+        Vector2D world = level.gridToWorld(gx, gy);
+        bool placed = false;
+        if      (selectedType == TowerType::Fire && gold >= FireTower::cost) {
+            towers.push_back(std::make_unique<FireTower>(world, fireTowerTexture, fireProjectileTexture));
+            gold -= FireTower::cost;
+            placed = true;
+        }
+        else if (selectedType == TowerType::Ice && gold >= IceTower::cost) {
+            towers.push_back(std::make_unique<IceTower>(world, iceTowerTexture, iceProjectileTexture));
+            gold -= IceTower::cost;
+            placed = true;
+        }
+        else if (selectedType == TowerType::Wind && gold >= WindTower::cost) {
+            towers.push_back(std::make_unique<WindTower>(world, windTowerTexture, windProjectileTexture));
+            gold -= WindTower::cost;
+            placed = true;
+        }
+        else if (selectedType == TowerType::Light && gold >= LightTower::cost) {
+            towers.push_back(std::make_unique<LightTower>(world, lightTowerTexture, gold));
+            gold -= LightTower::cost;
+            placed = true;
+        }
+        else if (selectedType == TowerType::Lightning && gold >= LightningTower::cost) {
+            towers.push_back(std::make_unique<LightningTower>(world, lightningTowerTexture, lightningProjectileTexture));
+            gold -= LightningTower::cost;
+            placed = true;
+        }
+        else if (selectedType == TowerType::Water && gold >= WaterTower::cost) {
+            towers.push_back(std::make_unique<WaterTower>(world, waterTowerTexture, waterProjectileTexture));
+            gold -= WaterTower::cost;
+            placed = true;
+        }
+        else {
+            std::cout << "Not enough gold to place " << (int)selectedType << " Tower. Current Gold: " << gold << std::endl;
         }
 
-        Vector2D world = level.gridToWorld(gx, gy);
-        if      (selectedType == TowerType::Fire)      towers.push_back(std::make_unique<FireTower>(world, fireTowerTexture, fireProjectileTexture));
-        else if (selectedType == TowerType::Ice)       towers.push_back(std::make_unique<IceTower>(world, iceTowerTexture, iceProjectileTexture));
-        else if (selectedType == TowerType::Wind)      towers.push_back(std::make_unique<WindTower>(world, windTowerTexture, windProjectileTexture));
-        else if (selectedType == TowerType::Light)     towers.push_back(std::make_unique<LightTower>(world, lightTowerTexture, gold));
-        else if (selectedType == TowerType::Lightning) towers.push_back(std::make_unique<LightningTower>(world, lightningTowerTexture, lightningProjectileTexture));
-        else if (selectedType == TowerType::Water)     towers.push_back(std::make_unique<WaterTower>(world, waterTowerTexture, waterProjectileTexture));
-
-        gold -= TOWER_BUY_COST;
-        level.setTile(gx, gy, Level::TOWER);
-        selectedType = TowerType::None;
+        if (placed) {
+            std::cout << "Placed " << (int)selectedType << " Tower, Remaining Gold: " << gold << std::endl;
+            level.setTile(gx, gy, Level::TOWER);
+            selectedType = TowerType::None;
+        }
     }
 }
 void Game::update(float deltaTime) {
@@ -207,15 +241,18 @@ void Game::update(float deltaTime) {
     if (waveActive && enemiesToSpawnInWave > 0) {
         spawnTimer += deltaTime;
         if (spawnTimer >= spawnDelay) {
-            auto newEnemy = std::make_unique<Enemy>(path[0].x, path[0].y, enemyTex, path);
-            
             // ถ้าเป็นตัวสุดท้ายของ Wave (ตัวที่ 1) ให้เป็นบอส
             if (enemiesToSpawnInWave == 1) {
-                newEnemy->setHp(500.0f);   // แกร่งกว่า 5 เท่า
-                newEnemy->setSpeed(20.0f); // บอสเดินช้า
+                enemies.push_back(
+                    std::make_unique<BossEnemy>(path[0].x, path[0].y, bossTex, path)
+                );
+            }
+            else {
+                enemies.push_back(
+                    std::make_unique<Enemy>(path[0].x, path[0].y, enemyTex, path)
+                );
             }
             
-            enemies.push_back(std::move(newEnemy));
             enemiesToSpawnInWave--;
             spawnTimer = 0.0f;
         }
@@ -227,22 +264,44 @@ void Game::update(float deltaTime) {
     }
 
     // Update towers (projectiles may kill enemies)
-    for (auto& tower : towers) tower->updateTower(deltaTime, enemies);
+    for (auto& tower : towers) tower->updateTower(deltaTime, enemies, waveActive);
 
     // 3. เช็คการตายและให้รางวัล (AFTER towers attack, so projectile kills are detected)
     for (auto& enemy : enemies) {
         // ถ้ามอนตาย (isAlive เป็น false) และยังไม่ได้ให้รางวัล
         if (!enemy->isAlive() && !enemy->isRewardGiven()) {
-            std::cout << "Enemy killed! +50 gold, Current: " << gold << std::endl;
-            gold += 50.0f; // สังหารได้เงิน 50
+            float reward = enemy->getReward();
+            gold += enemy->getReward(); // สังหารได้เงินตามรางวัลของมอนสเตอร์
+            std::cout << "Enemy killed! " << reward <<" gold, Current: " << gold << std::endl;
             enemy->setRewardGiven(true);
         }
+    }
+
+    // เช็คมอนสเตอร์ที่เข้าเส้นชัยแล้วลด HP ของผู้เล่น
+    for (auto& enemy : enemies) {
+    if (enemy->hasFinished() && !enemy->isRewardGiven()) {
+        playerHealth -= 1;
+        std::cout << "Enemy reached core! Player HP: " << playerHealth << std::endl;
+        if (playerHealth <= 0) {
+            std::cout << "Game Over! Final Wave: " << currentWave << std::endl;
+            currentState = GameState::GameOver;
+        }
+
+        // ตั้ง setRewardGiven เป็น true เพื่อไม่ให้ลด HP ซ้ำ
+        enemy->setRewardGiven(true);
+        }
+    }
+
+    if (waveActive && enemiesToSpawnInWave == 0 && enemies.empty()) {
+    waveActive = false;
+    std::cout << "Wave Cleared!\n";
     }
 
     // 4. แสดงผล Gold บน Window Title แบบ Real-time
     std::string title = "Tower Defense | Gold: " + std::to_string((int)gold) + 
                         " | Wave: " + std::to_string(currentWave) + 
-                        " | Enemies: " + std::to_string(enemies.size());
+                        " | Enemies: " + std::to_string(enemies.size()) + 
+                        " | Health: " + std::to_string(playerHealth);
     SDL_SetWindowTitle(window->getSDLWindow(), title.c_str());
 
     // ลบมอนสเตอร์ที่ตายหรือเข้าเส้นชัย
@@ -272,7 +331,10 @@ void Game::render() {
         level.render(window->getRenderer());
 
         // Render enemies and towers
-        for (auto& enemy : enemies) window->render(*enemy);
+        for (auto& enemy : enemies){
+            enemy->renderHpbar(window->getRenderer());
+            window->render(*enemy);
+        }
         for (auto& tower : towers) window->render(*tower);
 
         
@@ -322,6 +384,13 @@ void Game::render() {
                 SDL_RenderDrawRect(window->getRenderer(), &btnRect);
             }
         }
+    } else if (currentState == GameState::GameOver) {
+    SDL_SetRenderDrawColor(window->getRenderer(), 0, 0, 0, 200);
+    
+    SDL_Rect rect = {400, 250, 480, 200};
+    SDL_RenderFillRect(window->getRenderer(), &rect);
+
+    std::cout << "GAME OVER\n";
     }
     
     window->display();
