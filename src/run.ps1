@@ -11,8 +11,7 @@ $sources = @(
     "src/Entity.cpp",
     "src/Projectile.cpp",
     "src/RenderWindow.cpp",
-    "src/Level.cpp",
-    "src/Element.cpp"
+    "src/Level.cpp"
 )
 
 $compileArgs = @(
