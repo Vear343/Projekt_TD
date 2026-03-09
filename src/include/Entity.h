@@ -17,22 +17,21 @@ public:
     float getY() const { return y; }
     float getWidth() const { return width; }
     float getHeight() const { return height; }
+    SDL_Rect getCollider();
     
     // ฟังก์ชันหาจุดกึ่งกลาง (Center) สำคัญมากสำหรับป้อมในการคำนวณระยะยิง
     Vector2D getCenter() const {
-        return Vector2D(x + width / 2.0f, y + height / 2.0f);
+        return Vector2D(x, y);
     }
-
-    SDL_Rect getCollider() const { return collider; }
     
     // Virtual functions ที่ลูกหลานต้องเอาไปเขียนต่อ
     virtual void update(float deltaTime) = 0; 
-    virtual void render(SDL_Renderer* renderer);
+    // virtual void render(SDL_Renderer* renderer);
     
 protected:
     float x, y;
     float width, height;
     SDL_Rect collider;
-    SDL_Rect currentFrame;
+    SDL_Rect currentFrame; // สำหรับอนิเมชันในอนาคต
     SDL_Texture* texture;
 };

@@ -80,6 +80,13 @@ void RenderWindow::render(Entity& p_entity)
     dst.h = (int)p_entity.getHeight();  // Use entity's height
 
     SDL_RenderCopy(renderer, texture, &src, &dst);
+    
+    if (drawColliders) {
+        // Draw collider for debugging
+        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+        SDL_Rect coll = p_entity.getCollider();
+        SDL_RenderDrawRect(renderer, &coll);
+    }
 }
 
 // Present the rendered content to the screen

@@ -23,7 +23,13 @@ public:
     SDL_Renderer* getRenderer() {
         return renderer; // return the renderer so it can be used in other classes (like Level)
     }
+
+    // enable/disable drawing colliders for debugging
+    void setDrawColliders(bool enable) { drawColliders = enable; }
+    bool isDrawColliders() const { return drawColliders; }
+
 private:
     SDL_Window* window;
     SDL_Renderer* renderer;
+    bool drawColliders = false; // default off
 };

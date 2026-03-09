@@ -19,14 +19,19 @@ Enemy::Enemy(float p_x, float p_y, SDL_Texture* p_texture, const std::vector<Vec
       slowTimer(0.0f),
       speedMultiplier(1.0f)
 {
-    collider.w = 64;
-    collider.h = 64;
-    collider.x = static_cast<int>(x);
-    collider.y = static_cast<int>(y);
+    collider.w = 32;
+    collider.h = 32;
 }
 
 void Enemy::update(float deltaTime) {
-    if (!alive || finished) return;
+    // Check if enemy is dead - end movement and updates
+    if (hp <= 0) {
+        alive = false;
+        SDL_SetTextureColorMod(texture, 255, 255, 255); // Reset color when dead
+        return;
+    }
+
+    if (finished) return;
 
     // 1. Status Effects
     if (stunTimer > 0) {
@@ -58,10 +63,6 @@ void Enemy::update(float deltaTime) {
     }
 
     // 2. Movement
-    if (hp <= 0) {
-        alive = false;
-        return;
-    }
 
     if (currentPathIndex >= path.size()) {
         finished = true;
@@ -82,11 +83,13 @@ void Enemy::update(float deltaTime) {
     x += (direction.x / distance) * speed * speedMultiplier * deltaTime;
     y += (direction.y / distance) * speed * speedMultiplier * deltaTime;
 
-    collider.x = static_cast<int>(x);
-    collider.y = static_cast<int>(y);
+    collider.x = static_cast<int>(x - (collider.w / 2));
+    collider.y = static_cast<int>(y - (collider.h / 2));
 }
 
 void Enemy::takeDamage(float dmg) {
+    if (hp <= 0) return; // Already dead, skip damage
+    
     hp -= dmg;
     if (hp <= 0) {
         hp = 0;
