@@ -4,113 +4,110 @@
 #include <iostream>
 
 Tower::Tower(Vector2D pos, SDL_Texture* p_texture, SDL_Texture* p_projectile_texture)
-    : Entity(pos.x, pos.y, 64, 64, p_texture), // กำหนดขนาดเริ่มต้น 32x32
-      damage(0), range(0), attackSpeed(0), cooldown(0), projectileTexture(p_projectile_texture)
+    : Entity(pos.x, pos.y, 64, 64, p_texture),
+      damage(0), range(0), attackSpeed(0), cooldown(0),
+      projectileTexture(p_projectile_texture)
 {
     collider.w = static_cast<int>(width);
     collider.h = static_cast<int>(height);
 }
 
-void Tower::render(SDL_Renderer* renderer) {
-    // If tower has no texture, skip rendering
-    if (!texture) return;
-
-    // Query actual texture dimensions for source rectangle
-    int texWidth, texHeight;
-    SDL_QueryTexture(texture, NULL, NULL, &texWidth, &texHeight);
-
-    // Define the source rectangle (use full texture)
-    SDL_Rect src = { 0, 0, texWidth, texHeight };
-
-    // Define the destination rectangle (center on tower position, use tower size)
-    SDL_Rect dst;
-    dst.x = (int)(x - (width / 2.0f));  // Center on x-axis
-    dst.y = (int)(y - (height / 2.0f)); // Center on y-axis
-    dst.w = (int)width;   // Use tower's width
-    dst.h = (int)height;  // Use tower's height
-
-    SDL_RenderCopy(renderer, texture, &src, &dst);
-}
-
 Enemy* Tower::findTarget(std::vector<std::unique_ptr<Enemy>>& enemies) {
     Enemy* closestEnemy = nullptr;
-    float closestDistSq = range * range; // ใช้ Squared Distance
+    float closestDistSq = range * range;
 
     for (auto& enemy : enemies) {
         if (!enemy->isAlive()) continue;
 
         float dx = x - enemy->getX();
         float dy = y - enemy->getY();
-        float distSq = dx*dx + dy*dy;
+        float distSq = dx * dx + dy * dy;
 
         if (distSq <= closestDistSq) {
             closestDistSq = distSq;
             closestEnemy = enemy.get();
         }
     }
+
     return closestEnemy;
 }
 
-void FireTower::updateTower(float deltatime, std::vector<std::unique_ptr<Enemy>>& enemies) {
-    if (cooldown > 0) cooldown -= deltatime;
-
-    if (cooldown <= 0) {
-        Enemy* target = findTarget(enemies);
-        if (target) {
-            projectiles.push_back(std::make_unique<Projectile>(
-                x, 
-                y, 
-                projectileTexture, 
-                target,
-                ProjectileEffect::BURN
-            ));
-            cooldown = attackSpeed;
-        }
-    }
-    // ยิง projectile
+void Tower::updateProjectiles(float dt) {
     for (auto& p : projectiles)
-        p->update(deltatime);
+        p->update(dt);
 
-    // ลบ projectile ที่โดนเป้าหมายแล้ว
-    projectiles.erase(std::remove_if(projectiles.begin(), projectiles.end(),
+    projectiles.erase(
+        std::remove_if(projectiles.begin(), projectiles.end(),
         [](const std::unique_ptr<Projectile>& p) { return p->hasHit(); }),
         projectiles.end());
 }
 
-void IceTower::updateTower(float deltatime, std::vector<std::unique_ptr<Enemy>>& enemies) {
-    if (cooldown > 0) cooldown -= deltatime;
+void FireTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies) {
+    if (cooldown > 0) cooldown -= dt;
 
     if (cooldown <= 0) {
         Enemy* target = findTarget(enemies);
+
         if (target) {
             projectiles.push_back(std::make_unique<Projectile>(
-                x, 
-                y, 
-                projectileTexture, 
+                x,
+                y,
+                projectileTexture,
                 target,
-                ProjectileEffect::STUNT
+                ProjectileEffect::BURN
             ));
+
+            target->takeDamage(damage);
             cooldown = attackSpeed;
         }
     }
 
-    // ยิง projectile
     for (auto& p : projectiles)
-        p->update(deltatime);
+        p->update(dt);
 
-    // ลบ projectile ที่โดนเป้าหมายแล้ว
-    projectiles.erase(std::remove_if(projectiles.begin(), projectiles.end(),
+    projectiles.erase(
+        std::remove_if(projectiles.begin(), projectiles.end(),
+        [](const std::unique_ptr<Projectile>& p) { return p->hasHit(); }),
+        projectiles.end());
+}
+
+void IceTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies) {
+    if (cooldown > 0) cooldown -= dt;
+
+    if (cooldown <= 0) {
+        Enemy* target = findTarget(enemies);
+
+        if (target) {
+            projectiles.push_back(std::make_unique<Projectile>(
+                x,
+                y,
+                projectileTexture,
+                target,
+                ProjectileEffect::STUNT
+            ));
+
+            target->takeDamage(damage);
+            cooldown = attackSpeed;
+        }
+    }
+
+    for (auto& p : projectiles)
+        p->update(dt);
+
+    projectiles.erase(
+        std::remove_if(projectiles.begin(), projectiles.end(),
         [](const std::unique_ptr<Projectile>& p) { return p->hasHit(); }),
         projectiles.end());
 }
 
 void WindTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies) {
     cooldown -= dt;
+
     if (cooldown <= 0) {
         for (auto& enemy : enemies) {
             if ((getCenter() - enemy->getCenter()).length() <= range) {
                 enemy->takeDamage(damage);
-                enemy->pushBack(30.0f); // ผลักถอยหลัง 30 พิกเซล
+                enemy->pushBack(30.0f);
                 cooldown = attackSpeed;
                 break;
             }
@@ -120,34 +117,45 @@ void WindTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemi
 
 void LightTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies) {
     cooldown -= dt;
+
     if (cooldown <= 0) {
-        playerMoney += 50.0f; // เพิ่มเงิน 50 ทุก 20 วิ
+        playerMoney += 50.0f;
         cooldown = attackSpeed;
-        std::cout << "Light Tower generated 50 gold, Current: " << playerMoney << std::endl;
+
+        std::cout << "Light Tower generated 50 gold, Current: "
+                  << playerMoney << std::endl;
     }
 }
+
 void LightningTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies) {
     cooldown -= dt;
+
     if (cooldown <= 0) {
         int targetsHit = 0;
         float currentDamage = damage;
+
         for (auto& enemy : enemies) {
-            if (targetsHit >= 3) break; // ชิ่งครบ 3 ตัวหยุด
+            if (targetsHit >= 3) break;
+
             if ((getCenter() - enemy->getCenter()).length() <= range) {
                 enemy->takeDamage(currentDamage);
-                currentDamage *= 0.6f; // ลดดาเมจเหลือ 60% สำหรับตัวถัดไป
+                currentDamage *= 0.6f;
                 targetsHit++;
             }
         }
-        if (targetsHit > 0) cooldown = attackSpeed;
+
+        if (targetsHit > 0)
+            cooldown = attackSpeed;
     }
 }
+
 void WaterTower::updateTower(float dt, std::vector<std::unique_ptr<Enemy>>& enemies) {
     cooldown -= dt;
+
     if (cooldown <= 0) {
         for (auto& enemy : enemies) {
             if ((getCenter() - enemy->getCenter()).length() <= range) {
-                enemy->applySlow(0.5f, 2.0f); // ติดสโลว์ 2 วิ (ต้องเพิ่มฟังก์ชันนี้ใน Enemy)
+                enemy->applySlow(0.5f, 2.0f);
                 cooldown = attackSpeed;
                 break;
             }

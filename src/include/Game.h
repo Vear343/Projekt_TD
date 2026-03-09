@@ -22,6 +22,8 @@ public:
     void update(float deltaTime);
     void render();
     void clean();
+    int findTowerAt(Vector2D worldPos) const;
+    void sellTowerAtIndex(int index);
     
     // ฟังก์ชันจัดการ Wave
     void startNextWave();
@@ -29,6 +31,8 @@ public:
 private:
     bool running;
     float gold;
+    static constexpr float TOWER_BUY_COST = 50.0f;
+    static constexpr float TOWER_SELL_REFUND = 25.0f;
     RenderWindow* window;
     Level level;
     

@@ -16,6 +16,35 @@ Game::~Game() {
     clean();
 }
 
+int Game::findTowerAt(Vector2D worldPos) const {
+    for (int i = static_cast<int>(towers.size()) - 1; i >= 0; --i) {
+        const auto& tower = towers[i];
+        SDL_Rect rect;
+        rect.w = static_cast<int>(tower->getWidth());
+        rect.h = static_cast<int>(tower->getHeight());
+        rect.x = static_cast<int>(tower->getX() - tower->getWidth() / 2.0f);
+        rect.y = static_cast<int>(tower->getY() - tower->getHeight() / 2.0f);
+
+        if (worldPos.x >= rect.x && worldPos.x <= rect.x + rect.w &&
+            worldPos.y >= rect.y && worldPos.y <= rect.y + rect.h) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+void Game::sellTowerAtIndex(int index) {
+    if (index < 0 || index >= static_cast<int>(towers.size())) return;
+
+    int gx, gy;
+    if (level.worldToGrid(Vector2D(towers[index]->getX(), towers[index]->getY()), gx, gy)) {
+        level.setTile(gx, gy, Level::EMPTY);
+    }
+
+    towers.erase(towers.begin() + index);
+    gold += TOWER_SELL_REFUND;
+}
+
 bool Game::init() {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) return false;
     if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) return false;
@@ -37,10 +66,11 @@ bool Game::init() {
     // Load projectile textures
     fireProjectileTexture = window->loadTexture("assets/Fire_Ball.png");
     iceProjectileTexture = window->loadTexture("assets/Ice_Ball.png");
-    windProjectileTexture = window->loadTexture("assets/Wind_Ball.png");
-    lightProjectileTexture = window->loadTexture("assets/Light_Ball.png");
-    lightningProjectileTexture = window->loadTexture("assets/Lightning_Ball.png");
-    waterProjectileTexture = window->loadTexture("assets/Water_Ball.png");
+    // Missing projectile assets fallback to Fire_Ball to keep runtime stable.
+    windProjectileTexture = window->loadTexture("assets/Fire_Ball.png");
+    lightProjectileTexture = window->loadTexture("assets/Fire_Ball.png");
+    lightningProjectileTexture = window->loadTexture("assets/Fire_Ball.png");
+    waterProjectileTexture = window->loadTexture("assets/Fire_Ball.png");
     menuTex = window->loadTexture("assets/Tower_Menu.png");
     playButtonTexture = window->loadTexture("assets/play_button.png");
     
@@ -80,11 +110,10 @@ void Game::startNextWave() {
 void Game::handleEvents() {
     while (SDL_PollEvent(&event)) {
         if (event.type == SDL_QUIT) running = false;
-        
+
         if (currentState == GameState::Menu) {
             if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
                 Vector2D mpos((float)event.button.x, (float)event.button.y);
-                // Assume play button is centered, 200x100 pixels
                 int winW = window->getwidth();
                 int winH = window->getheight();
                 SDL_Rect playButton = { (winW - 200) / 2, (winH - 100) / 2, 200, 100 };
@@ -95,61 +124,82 @@ void Game::handleEvents() {
                 }
             }
             if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_x) running = false;
-        } else if (currentState == GameState::Playing) {
-            if (event.type == SDL_KEYDOWN) {
-                if (event.key.keysym.sym == SDLK_n) startNextWave(); // กด N เพื่อเริ่ม/ข้าม Wave
-                else if (event.key.keysym.sym == SDLK_c) {
-                    // toggle collider drawing
-                    bool current = window->isDrawColliders();
-                    window->setDrawColliders(!current);
-                }
-            }
-
-            if (event.type == SDL_MOUSEMOTION) {
-                mousePos.x = (float)event.motion.x;
-                mousePos.y = (float)event.motion.y;
-            }
-
-            if (event.type == SDL_MOUSEBUTTONDOWN) {
-                Vector2D mpos((float)event.button.x, (float)event.button.y);
-                int winH = window->getheight();
-                
-                if (event.button.button == SDL_BUTTON_LEFT) {
-                    // คลิกเลือกป้อมจาก UI (แถบล่าง 100px)
-                    if (mpos.y >= winH - 100) {
-                        int idx = (int)mpos.x / 100;
-                        if (idx == 0) selectedType = TowerType::Fire;
-                        else if (idx == 1) selectedType = TowerType::Ice;
-                        else if (idx == 2) selectedType = TowerType::Wind;
-                        else if (idx == 3) selectedType = TowerType::Light;
-                        else if (idx == 4) selectedType = TowerType::Lightning;
-                        else if (idx == 5) selectedType = TowerType::Water;
-                    }
-                    // วางป้อม
-                    else if (selectedType != TowerType::None) {
-                        int gx, gy;
-                        if (level.worldToGrid(mpos, gx, gy) && level.isEmpty(gx, gy)) {
-                            Vector2D world = level.gridToWorld(gx, gy);
-                            if      (selectedType == TowerType::Fire)      towers.push_back(std::make_unique<FireTower>(world, fireTowerTexture, fireProjectileTexture));
-                            else if (selectedType == TowerType::Ice)       towers.push_back(std::make_unique<IceTower>(world, iceTowerTexture, iceProjectileTexture));
-                            else if (selectedType == TowerType::Wind)      towers.push_back(std::make_unique<WindTower>(world, windTowerTexture, windProjectileTexture));
-                            else if (selectedType == TowerType::Light)     towers.push_back(std::make_unique<LightTower>(world, lightTowerTexture, gold));
-                            else if (selectedType == TowerType::Lightning) towers.push_back(std::make_unique<LightningTower>(world, lightningTowerTexture, lightningProjectileTexture));
-                            else if (selectedType == TowerType::Water)     towers.push_back(std::make_unique<WaterTower>(world, waterTowerTexture, waterProjectileTexture));
-
-                            level.setTile(gx, gy, Level::TOWER);
-                            selectedType = TowerType::None;
-                        }
-                    }
-                } else if (event.button.button == SDL_BUTTON_RIGHT) {
-                    selectedType = TowerType::None;
-                }
-            }
-            if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) currentState = GameState::Menu;
+            continue;
         }
+
+        if (currentState != GameState::Playing) continue;
+
+        if (event.type == SDL_KEYDOWN) {
+            if (event.key.keysym.sym == SDLK_n) startNextWave();
+            else if (event.key.keysym.sym == SDLK_c) {
+                bool current = window->isDrawColliders();
+                window->setDrawColliders(!current);
+            } else if (event.key.keysym.sym == SDLK_ESCAPE) {
+                currentState = GameState::Menu;
+            }
+        }
+
+        if (event.type == SDL_MOUSEMOTION) {
+            mousePos.x = (float)event.motion.x;
+            mousePos.y = (float)event.motion.y;
+        }
+
+        if (event.type != SDL_MOUSEBUTTONDOWN) continue;
+
+        Vector2D mpos((float)event.button.x, (float)event.button.y);
+        int winH = window->getheight();
+
+        if (event.button.button == SDL_BUTTON_RIGHT) {
+            selectedType = TowerType::None;
+            continue;
+        }
+
+        if (event.button.button != SDL_BUTTON_LEFT) continue;
+
+        if (event.button.clicks >= 2 && mpos.y < winH - 100) {
+            int towerIndex = findTowerAt(mpos);
+            if (towerIndex != -1) {
+                sellTowerAtIndex(towerIndex);
+                selectedType = TowerType::None;
+                continue;
+            }
+        }
+
+        if (mpos.y >= winH - 100) {
+            int idx = (int)mpos.x / 100;
+            if (idx == 0) selectedType = TowerType::Fire;
+            else if (idx == 1) selectedType = TowerType::Ice;
+            else if (idx == 2) selectedType = TowerType::Wind;
+            else if (idx == 3) selectedType = TowerType::Light;
+            else if (idx == 4) selectedType = TowerType::Lightning;
+            else if (idx == 5) selectedType = TowerType::Water;
+            continue;
+        }
+
+        if (selectedType == TowerType::None) continue;
+
+        int gx, gy;
+        if (!level.worldToGrid(mpos, gx, gy) || !level.isEmpty(gx, gy)) continue;
+
+        if (gold < TOWER_BUY_COST) {
+            std::cout << "Not enough gold. Need " << TOWER_BUY_COST << std::endl;
+            selectedType = TowerType::None;
+            continue;
+        }
+
+        Vector2D world = level.gridToWorld(gx, gy);
+        if      (selectedType == TowerType::Fire)      towers.push_back(std::make_unique<FireTower>(world, fireTowerTexture, fireProjectileTexture));
+        else if (selectedType == TowerType::Ice)       towers.push_back(std::make_unique<IceTower>(world, iceTowerTexture, iceProjectileTexture));
+        else if (selectedType == TowerType::Wind)      towers.push_back(std::make_unique<WindTower>(world, windTowerTexture, windProjectileTexture));
+        else if (selectedType == TowerType::Light)     towers.push_back(std::make_unique<LightTower>(world, lightTowerTexture, gold));
+        else if (selectedType == TowerType::Lightning) towers.push_back(std::make_unique<LightningTower>(world, lightningTowerTexture, lightningProjectileTexture));
+        else if (selectedType == TowerType::Water)     towers.push_back(std::make_unique<WaterTower>(world, waterTowerTexture, waterProjectileTexture));
+
+        gold -= TOWER_BUY_COST;
+        level.setTile(gx, gy, Level::TOWER);
+        selectedType = TowerType::None;
     }
 }
-
 void Game::update(float deltaTime) {
     if (currentState != GameState::Playing) return;
 
@@ -293,3 +343,4 @@ void Game::clean() {
     IMG_Quit();
     SDL_Quit();
 }
+
