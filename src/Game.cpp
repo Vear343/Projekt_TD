@@ -59,13 +59,7 @@ bool Game::init() {
     // โหลด Texture ทั้งหมด
     enemyTex = window->loadTexture("assets/Enemy.png");
     bossTex = window->loadTexture("assets/Boss.png");
-    mainmenuTex = window->loadTexture("assets/Main_Menu.png");
-    bgTex = window->loadTexture("assets/MAP.png");
-    menuTex = window->loadTexture("assets/Tower_Menu.png");
-    playButtonTexture = window->loadTexture("assets/play_button.png");
-    exitButtonTexture = window->loadTexture("assets/exit_button.png");
-    resumeButtonTexture = window->loadTexture("assets/resume_button.png");
-    exittomainButtonTexture = window->loadTexture("assets/exit_to_main_button.png");
+    bgTex = window->loadTexture("assets/Sky_01.png");
 
     // Load Towers
     fireTowerTexture      = window->loadTexture("assets/Fire_Tower.png");
@@ -92,31 +86,14 @@ bool Game::init() {
     waterIconTex = window->loadTexture("assets/Water_Tower.png");
 
     path = {
-        level.gridToWorld(0, 8),
-        level.gridToWorld(3, 8),
-        level.gridToWorld(3, 7),
-        level.gridToWorld(4, 7),
-        level.gridToWorld(4, 4),
-        level.gridToWorld(8, 4),
-        level.gridToWorld(8, 7),
-        level.gridToWorld(7, 7),
-        level.gridToWorld(7, 12),
-        level.gridToWorld(8, 12),
-        level.gridToWorld(8, 13),
-        level.gridToWorld(11, 13),
-        level.gridToWorld(11, 12),
-        level.gridToWorld(12, 12),
-        level.gridToWorld(12, 11),
-        level.gridToWorld(16, 11),
-        level.gridToWorld(16, 10),
-        level.gridToWorld(17, 10),
-        level.gridToWorld(17, 7),
-        level.gridToWorld(18, 7),
-        level.gridToWorld(18, 5),
-        level.gridToWorld(21, 5),
-        level.gridToWorld(21, 10),
-        level.gridToWorld(22, 10),
-        level.gridToWorld(22, 11)
+        level.gridToWorld(0, 9),
+        level.gridToWorld(5, 9),
+        level.gridToWorld(5, 3),
+        level.gridToWorld(10, 3),
+        level.gridToWorld(10, 12),
+        level.gridToWorld(18, 12),
+        level.gridToWorld(18, 4),
+        level.gridToWorld(27, 4)
     };
 
     lastTime = SDL_GetPerformanceCounter();
@@ -410,41 +387,11 @@ void Game::render() {
         SDL_RenderCopy(window->getRenderer(), exitButtonTexture, NULL, &exitButton);
         // Optionally render text, but for simplicity, just the button
     } else if (currentState == GameState::Playing) {
-        renderPlayingState();
-    } else if (currentState == GameState::Pause) {
-        renderPlayingState();
-        SDL_SetRenderDrawBlendMode(window->getRenderer(), SDL_BLENDMODE_BLEND);
-        SDL_SetRenderDrawColor(window->getRenderer(), 0, 0, 0, 150);
-        SDL_Rect fullScreen = { 0, 0, window->getwidth(), window->getheight() };
-        SDL_RenderFillRect(window->getRenderer(), &fullScreen);
+        // Render background
+        if (bgTex) window->drawTextureFull(bgTex);
 
-        int winW = window->getwidth();
-        int winH = window->getheight();
-        SDL_Rect resumeButton = { (winW - 200) / 2, (winH - 100) / 2 + 100, 200, 100 };
-        SDL_RenderCopy(window->getRenderer(), resumeButtonTexture, NULL, &resumeButton);
-        SDL_Rect exittomainButton = { (winW - 200) / 2, (winH - 100) / 2 + 250, 200, 100 };
-        SDL_RenderCopy(window->getRenderer(), exittomainButtonTexture, NULL, &exittomainButton);
-        
-    } else if (currentState == GameState::GameOver) {
-    SDL_SetRenderDrawColor(window->getRenderer(), 0, 0, 0, 200);
-    
-    SDL_Rect rect = {400, 250, 480, 200};
-    SDL_RenderFillRect(window->getRenderer(), &rect);
-
-    std::cout << "GAME OVER\n";
-    }
-    
-    window->display();
-}
-
-void Game::renderPlayingState() {
-    // Render background
-    if (bgTex) window->drawTextureFull(bgTex);
-
-    // Render level grid only when a tower type is selected (placement mode)
-    if (selectedType != TowerType::None) {
+        // Render level
         level.render(window->getRenderer());
-    }
 
     // Render enemies and towers
     for (auto& enemy : enemies){
@@ -500,6 +447,11 @@ void Game::renderPlayingState() {
             SDL_RenderDrawRect(window->getRenderer(), &btnRect);
         }
     }
+    } else if (currentState == GameState::Pause) {
+        if (bgTex) window->drawTextureFull(bgTex);
+    }
+
+    window->present();
 }
 
 void Game::run() {
