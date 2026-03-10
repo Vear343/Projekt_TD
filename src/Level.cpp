@@ -40,23 +40,23 @@ void Level::render(SDL_Renderer* renderer) {
             };
             switch ( (mapData[y][x])){
             case 0: // empty
-                SDL_SetRenderDrawColor(renderer, 50, 160, 50, 255); 
+                SDL_SetRenderDrawColor(renderer, 50, 160, 50, 50); 
                 break;    
             
             case 1: // path
-                SDL_SetRenderDrawColor(renderer, 150, 100, 50, 255);
+                SDL_SetRenderDrawColor(renderer, 150, 100, 50, 50);
                 break;
                 
             case 2: // wall
-                SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
+                SDL_SetRenderDrawColor(renderer, 100, 100, 100, 50);
                 break;
 
             case 3:  // tower placed
-                SDL_SetRenderDrawColor(renderer, 0, 0, 200, 255);
+                SDL_SetRenderDrawColor(renderer, 0, 0, 200, 50);
                 break;
 
             default:
-                SDL_SetRenderDrawColor(renderer, 255, 0, 255, 255);
+                SDL_SetRenderDrawColor(renderer, 255, 0, 255, 50);
                 break;
             }
 
