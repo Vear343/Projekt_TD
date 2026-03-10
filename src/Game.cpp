@@ -59,7 +59,13 @@ bool Game::init() {
     // โหลด Texture ทั้งหมด
     enemyTex = window->loadTexture("assets/Enemy.png");
     bossTex = window->loadTexture("assets/Boss.png");
-    bgTex = window->loadTexture("assets/Sky_01.png");
+    mainmenuTex = window->loadTexture("assets/Main_Menu.png");
+    bgTex = window->loadTexture("assets/MAP.png");
+    menuTex = window->loadTexture("assets/Tower_Menu.png");
+    playButtonTexture = window->loadTexture("assets/play_button.png");
+    exitButtonTexture = window->loadTexture("assets/exit_button.png");
+    resumeButtonTexture = window->loadTexture("assets/resume_button.png");
+    exittomainButtonTexture = window->loadTexture("assets/exit_to_main_button.png");
 
     // Load Towers
     fireTowerTexture      = window->loadTexture("assets/Fire_Tower.png");
@@ -76,8 +82,6 @@ bool Game::init() {
     lightProjectileTexture = window->loadTexture("assets/Light_Ball.png");
     lightningProjectileTexture = window->loadTexture("assets/Lightning_Ball.png");
     waterProjectileTexture = window->loadTexture("assets/Water_Ball.png");
-    menuTex = window->loadTexture("assets/Tower_Menu.png");
-    playButtonTexture = window->loadTexture("assets/play_button.png");
     
     // Icons
     fireIconTex = window->loadTexture("assets/Fire_Tower.png");
@@ -88,14 +92,31 @@ bool Game::init() {
     waterIconTex = window->loadTexture("assets/Water_Tower.png");
 
     path = {
-        level.gridToWorld(0, 9),
-        level.gridToWorld(5, 9),
-        level.gridToWorld(5, 3),
-        level.gridToWorld(10, 3),
-        level.gridToWorld(10, 12),
-        level.gridToWorld(18, 12),
-        level.gridToWorld(18, 4),
-        level.gridToWorld(27, 4)
+        level.gridToWorld(0, 8),
+        level.gridToWorld(3, 8),
+        level.gridToWorld(3, 7),
+        level.gridToWorld(4, 7),
+        level.gridToWorld(4, 4),
+        level.gridToWorld(8, 4),
+        level.gridToWorld(8, 7),
+        level.gridToWorld(7, 7),
+        level.gridToWorld(7, 12),
+        level.gridToWorld(8, 12),
+        level.gridToWorld(8, 13),
+        level.gridToWorld(11, 13),
+        level.gridToWorld(11, 12),
+        level.gridToWorld(12, 12),
+        level.gridToWorld(12, 11),
+        level.gridToWorld(16, 11),
+        level.gridToWorld(16, 10),
+        level.gridToWorld(17, 10),
+        level.gridToWorld(17, 7),
+        level.gridToWorld(18, 7),
+        level.gridToWorld(18, 5),
+        level.gridToWorld(21, 5),
+        level.gridToWorld(21, 10),
+        level.gridToWorld(22, 10),
+        level.gridToWorld(22, 11)
     };
 
     lastTime = SDL_GetPerformanceCounter();
@@ -116,121 +137,175 @@ void Game::startNextWave() {
     std::cout << "Wave " << currentWave << " Started!" << std::endl;
 }
 
+void Game::resetGame() {
+    gold = 500.0f;
+    playerHealth = 20;
+    currentWave = 0;
+    enemiesToSpawnInWave = 0;
+    spawnTimer = 0.0f;
+    waveActive = false;
+    enemies.clear();
+    towers.clear();
+    level.reset();  // Reset the level grid
+    selectedType = TowerType::None;
+    // Note: Path is set in init() and doesn't need resetting unless modified dynamically.
+}
+
 void Game::handleEvents() {
     while (SDL_PollEvent(&event)) {
         if (event.type == SDL_QUIT) running = false;
 
         if (currentState == GameState::Menu) {
-            enemies.clear();
             if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
                 Vector2D mpos((float)event.button.x, (float)event.button.y);
                 int winW = window->getwidth();
                 int winH = window->getheight();
-                SDL_Rect playButton = { (winW - 200) / 2, (winH - 100) / 2, 200, 100 };
-                SDL_RenderCopy(window->getRenderer(), playButtonTexture, NULL, &playButton);
+
+                SDL_Rect playButton = { (winW - 200) / 2, (winH - 100) / 2 + 100, 200, 100 }; 
                 if (mpos.x >= playButton.x && mpos.x <= playButton.x + playButton.w &&
                     mpos.y >= playButton.y && mpos.y <= playButton.y + playButton.h) {
+                    resetGame();  // Reset all game state instead of just clearing enemies/towers
                     currentState = GameState::Playing;
                 }
+
+                SDL_Rect exitButton = { (winW - 200) / 2, (winH - 100) / 2 + 250, 200, 100 };
+                if (mpos.x >= exitButton.x && mpos.x <= exitButton.x + exitButton.w &&
+                    mpos.y >= exitButton.y && mpos.y <= exitButton.y + exitButton.h) {
+                    running = false;
+                }
             }
-            if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_x) running = false;
             continue;
         }
 
-        if (currentState != GameState::Playing) continue;
+        if (currentState == GameState::Pause) {
 
-        if (event.type == SDL_KEYDOWN) {
-            if (event.key.keysym.sym == SDLK_n && isWaveFinished()) { startNextWave(); }
-            else if (event.key.keysym.sym == SDLK_c) {
-                bool current = window->isDrawColliders();
-                window->setDrawColliders(!current);
-            } else if (event.key.keysym.sym == SDLK_ESCAPE) {
-                currentState = GameState::Menu;
+            if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) {
+                currentState = GameState::Playing;
+                continue;
             }
-        }
 
-        if (event.type == SDL_MOUSEMOTION) {
-            mousePos.x = (float)event.motion.x;
-            mousePos.y = (float)event.motion.y;
-        }
+            if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+                Vector2D mpos((float)event.button.x, (float)event.button.y);
+                int winW = window->getwidth();
+                int winH = window->getheight();
+                
+                SDL_Rect resumeButton = { (winW - 200) / 2, (winH - 100) / 2 + 100, 200, 100 };
+                if (mpos.x >= resumeButton.x && mpos.x <= resumeButton.x + resumeButton.w &&
+                    mpos.y >= resumeButton.y && mpos.y <= resumeButton.y + resumeButton.h) {
+                    currentState = GameState::Playing;
+                }
 
-        if (event.type != SDL_MOUSEBUTTONDOWN) continue;
-
-        Vector2D mpos((float)event.button.x, (float)event.button.y);
-        int winH = window->getheight();
-
-        if (event.button.button == SDL_BUTTON_RIGHT) {
-            selectedType = TowerType::None;
+                SDL_Rect exittomainButton = { (winW - 200) / 2, (winH - 100) / 2 + 250, 200, 100 };
+                if (mpos.x >= exittomainButton.x && mpos.x <= exittomainButton.x + exittomainButton.w &&
+                    mpos.y >= exittomainButton.y && mpos.y <= exittomainButton.y + exittomainButton.h) {
+                    currentState = GameState::Menu;
+                }
+            }
             continue;
         }
 
-        if (event.button.button != SDL_BUTTON_LEFT) continue;
-
-        if (event.button.clicks >= 2 && mpos.y < winH - 100) {
-            int towerIndex = findTowerAt(mpos);
-            if (towerIndex != -1) {
-                sellTowerAtIndex(towerIndex);
+        if (currentState == GameState::Playing) {
+            if (event.type == SDL_KEYDOWN) {
+                if (event.key.keysym.sym == SDLK_ESCAPE) {
+                    if (currentState == GameState::Playing) {
+                        currentState = GameState::Pause;
+                        continue;
+                    }
+                }
+                if (currentState != GameState::Playing) continue;
+    
+                if (event.key.keysym.sym == SDLK_n && isWaveFinished()) { startNextWave(); }
+                else if (event.key.keysym.sym == SDLK_c) {
+                    bool current = window->isDrawColliders();
+                    window->setDrawColliders(!current);
+                }
+            }
+    
+            if (currentState != GameState::Playing) continue;  
+    
+            if (event.type == SDL_MOUSEMOTION) {
+                mousePos.x = (float)event.motion.x;
+                mousePos.y = (float)event.motion.y;
+            }
+    
+            if (event.type != SDL_MOUSEBUTTONDOWN) continue;
+    
+            Vector2D mpos((float)event.button.x, (float)event.button.y);
+            int winH = window->getheight();
+    
+            if (event.button.button == SDL_BUTTON_RIGHT) {
                 selectedType = TowerType::None;
                 continue;
             }
-        }
-
-        if (mpos.y >= winH - 100) {
-            int idx = (int)mpos.x / 100;
-            if (idx == 0) selectedType = TowerType::Fire;
-            else if (idx == 1) selectedType = TowerType::Ice;
-            else if (idx == 2) selectedType = TowerType::Wind;
-            else if (idx == 3) selectedType = TowerType::Light;
-            else if (idx == 4) selectedType = TowerType::Lightning;
-            else if (idx == 5) selectedType = TowerType::Water;
-            continue;
-        }
-
-        if (selectedType == TowerType::None) continue;
-
-        int gx, gy;
-        if (!level.worldToGrid(mpos, gx, gy) || !level.isEmpty(gx, gy)) continue;
-
-        Vector2D world = level.gridToWorld(gx, gy);
-        bool placed = false;
-        if      (selectedType == TowerType::Fire && gold >= FireTower::cost) {
-            towers.push_back(std::make_unique<FireTower>(world, fireTowerTexture, fireProjectileTexture));
-            gold -= FireTower::cost;
-            placed = true;
-        }
-        else if (selectedType == TowerType::Ice && gold >= IceTower::cost) {
-            towers.push_back(std::make_unique<IceTower>(world, iceTowerTexture, iceProjectileTexture));
-            gold -= IceTower::cost;
-            placed = true;
-        }
-        else if (selectedType == TowerType::Wind && gold >= WindTower::cost) {
-            towers.push_back(std::make_unique<WindTower>(world, windTowerTexture, windProjectileTexture));
-            gold -= WindTower::cost;
-            placed = true;
-        }
-        else if (selectedType == TowerType::Light && gold >= LightTower::cost) {
-            towers.push_back(std::make_unique<LightTower>(world, lightTowerTexture, gold));
-            gold -= LightTower::cost;
-            placed = true;
-        }
-        else if (selectedType == TowerType::Lightning && gold >= LightningTower::cost) {
-            towers.push_back(std::make_unique<LightningTower>(world, lightningTowerTexture, lightningProjectileTexture));
-            gold -= LightningTower::cost;
-            placed = true;
-        }
-        else if (selectedType == TowerType::Water && gold >= WaterTower::cost) {
-            towers.push_back(std::make_unique<WaterTower>(world, waterTowerTexture, waterProjectileTexture));
-            gold -= WaterTower::cost;
-            placed = true;
-        }
-        else {
-            std::cout << "Not enough gold to place " << (int)selectedType << " Tower. Current Gold: " << gold << std::endl;
-        }
-
-        if (placed) {
-            std::cout << "Placed " << (int)selectedType << " Tower, Remaining Gold: " << gold << std::endl;
-            level.setTile(gx, gy, Level::TOWER);
-            selectedType = TowerType::None;
+    
+            if (event.button.button != SDL_BUTTON_LEFT) continue;
+    
+            if (event.button.clicks >= 2 && mpos.y < winH - 100) {
+                int towerIndex = findTowerAt(mpos);
+                if (towerIndex != -1) {
+                    sellTowerAtIndex(towerIndex);
+                    selectedType = TowerType::None;
+                    continue;
+                }
+            }
+    
+            if (mpos.y >= winH - 100) {
+                int idx = (int)mpos.x / 100;
+                if (idx == 0) selectedType = TowerType::Fire;
+                else if (idx == 1) selectedType = TowerType::Ice;
+                else if (idx == 2) selectedType = TowerType::Wind;
+                else if (idx == 3) selectedType = TowerType::Light;
+                else if (idx == 4) selectedType = TowerType::Lightning;
+                else if (idx == 5) selectedType = TowerType::Water;
+                continue;
+            }
+    
+            if (selectedType == TowerType::None) continue;
+    
+            int gx, gy;
+            if (!level.worldToGrid(mpos, gx, gy) || !level.isEmpty(gx, gy)) continue;
+    
+            Vector2D world = level.gridToWorld(gx, gy);
+            bool placed = false;
+            if      (selectedType == TowerType::Fire && gold >= FireTower::cost) {
+                towers.push_back(std::make_unique<FireTower>(world, fireTowerTexture, fireProjectileTexture));
+                gold -= FireTower::cost;
+                placed = true;
+            }
+            else if (selectedType == TowerType::Ice && gold >= IceTower::cost) {
+                towers.push_back(std::make_unique<IceTower>(world, iceTowerTexture, iceProjectileTexture));
+                gold -= IceTower::cost;
+                placed = true;
+            }
+            else if (selectedType == TowerType::Wind && gold >= WindTower::cost) {
+                towers.push_back(std::make_unique<WindTower>(world, windTowerTexture, windProjectileTexture));
+                gold -= WindTower::cost;
+                placed = true;
+            }
+            else if (selectedType == TowerType::Light && gold >= LightTower::cost) {
+                towers.push_back(std::make_unique<LightTower>(world, lightTowerTexture, gold));
+                gold -= LightTower::cost;
+                placed = true;
+            }
+            else if (selectedType == TowerType::Lightning && gold >= LightningTower::cost) {
+                towers.push_back(std::make_unique<LightningTower>(world, lightningTowerTexture, lightningProjectileTexture));
+                gold -= LightningTower::cost;
+                placed = true;
+            }
+            else if (selectedType == TowerType::Water && gold >= WaterTower::cost) {
+                towers.push_back(std::make_unique<WaterTower>(world, waterTowerTexture, waterProjectileTexture));
+                gold -= WaterTower::cost;
+                placed = true;
+            }
+            else {
+                std::cout << "Not enough gold to place " << (int)selectedType << " Tower. Current Gold: " << gold << std::endl;
+            }
+    
+            if (placed) {
+                std::cout << "Placed " << (int)selectedType << " Tower, Remaining Gold: " << gold << std::endl;
+                level.setTile(gx, gy, Level::TOWER);
+                selectedType = TowerType::None;
+            }
         }
     }
 }
@@ -279,18 +354,27 @@ void Game::update(float deltaTime) {
 
     // เช็คมอนสเตอร์ที่เข้าเส้นชัยแล้วลด HP ของผู้เล่น
     for (auto& enemy : enemies) {
-    if (enemy->hasFinished() && !enemy->isRewardGiven()) {
-        playerHealth -= 1;
-        std::cout << "Enemy reached core! Player HP: " << playerHealth << std::endl;
-        if (playerHealth <= 0) {
-            std::cout << "Game Over! Final Wave: " << currentWave << std::endl;
-            currentState = GameState::GameOver;
-        }
+        if (enemy->hasFinished() && !enemy->isRewardGiven()) {
+            // Check if it's a boss to apply different damage
+            if (dynamic_cast<BossEnemy*>(enemy.get()) != nullptr) {
+                playerHealth -= 3;  // Boss deals 3 damage
+                std::cout << "Boss reached core! Player HP: " << playerHealth << std::endl;
+            } else {
+                playerHealth -= 1;  // Regular enemy deals 1 damage
+                std::cout << "Enemy reached core! Player HP: " << playerHealth << std::endl;
+            }
 
-        // ตั้ง setRewardGiven เป็น true เพื่อไม่ให้ลด HP ซ้ำ
-        enemy->setRewardGiven(true);
+            if (playerHealth <= 0) {
+                std::cout << "Game Over! Final Wave: " << currentWave << std::endl;
+                currentState = GameState::GameOver;
+            }
+
+            // ตั้ง setRewardGiven เป็น true เพื่อไม่ให้ลด HP ซ้ำ
+            enemy->setRewardGiven(true);
         }
     }
+
+    if (currentState != GameState::Playing) return;
 
     if (waveActive && enemiesToSpawnInWave == 0 && enemies.empty()) {
     waveActive = false;
@@ -315,75 +399,32 @@ void Game::render() {
 
     if (currentState == GameState::Menu) {
         // Render menu background (using bgTex or a separate one)
-        if (bgTex) window->drawTextureFull(bgTex);
+        if (mainmenuTex) window->drawTextureFull(mainmenuTex);
 
         // Render play button
         int winW = window->getwidth();
         int winH = window->getheight();
-        SDL_Rect playButton = { (winW - 200) / 2, (winH - 100) / 2, 200, 100 }; //
+        SDL_Rect playButton = { (winW - 200) / 2, (winH - 100) / 2 + 100, 200, 100 }; 
         SDL_RenderCopy(window->getRenderer(), playButtonTexture, NULL, &playButton);
+        SDL_Rect exitButton = { (winW - 200) / 2, (winH - 100) / 2 + 250, 200, 100 };
+        SDL_RenderCopy(window->getRenderer(), exitButtonTexture, NULL, &exitButton);
         // Optionally render text, but for simplicity, just the button
     } else if (currentState == GameState::Playing) {
-        // Render background
-        if (bgTex) window->drawTextureFull(bgTex);
+        renderPlayingState();
+    } else if (currentState == GameState::Pause) {
+        renderPlayingState();
+        SDL_SetRenderDrawBlendMode(window->getRenderer(), SDL_BLENDMODE_BLEND);
+        SDL_SetRenderDrawColor(window->getRenderer(), 0, 0, 0, 150);
+        SDL_Rect fullScreen = { 0, 0, window->getwidth(), window->getheight() };
+        SDL_RenderFillRect(window->getRenderer(), &fullScreen);
 
-        // Render level
-        level.render(window->getRenderer());
-
-        // Render enemies and towers
-        for (auto& enemy : enemies){
-            enemy->renderHpbar(window->getRenderer());
-            window->render(*enemy);
-        }
-        for (auto& tower : towers) window->render(*tower);
-
-        
-        // Render projectiles from all towers
-        for (auto& tower : towers) {
-            for (const auto& p : tower->projectiles)
-            window->render(*p);
-        }
-
-        // Ghost Preview
-        if (selectedType != TowerType::None) {
-            int gx, gy;
-            if (level.worldToGrid(mousePos, gx, gy)) {
-                Vector2D world = level.gridToWorld(gx, gy);
-                SDL_Rect ghostRect = { (int)world.x - 16, (int)world.y - 16, 32, 32 };
-                
-                switch (selectedType) {
-                    case TowerType::Fire:      SDL_SetRenderDrawColor(window->getRenderer(), 255, 0, 0, 150); break;
-                    case TowerType::Ice:       SDL_SetRenderDrawColor(window->getRenderer(), 0, 150, 255, 150); break;
-                    case TowerType::Wind:      SDL_SetRenderDrawColor(window->getRenderer(), 200, 255, 200, 150); break;
-                    case TowerType::Light:     SDL_SetRenderDrawColor(window->getRenderer(), 255, 255, 150, 150); break;
-                    case TowerType::Lightning: SDL_SetRenderDrawColor(window->getRenderer(), 200, 0, 255, 150); break;
-                    case TowerType::Water:     SDL_SetRenderDrawColor(window->getRenderer(), 0, 0, 255, 150); break;
-                    default: break;
-                }
-                if (!level.isEmpty(gx, gy)) SDL_SetRenderDrawColor(window->getRenderer(), 255, 0, 0, 100);
-                SDL_RenderFillRect(window->getRenderer(), &ghostRect);
-            }
-        }
-        // UI Rendering
         int winW = window->getwidth();
         int winH = window->getheight();
-        const int MENU_H = 100;
+        SDL_Rect resumeButton = { (winW - 200) / 2, (winH - 100) / 2 + 100, 200, 100 };
+        SDL_RenderCopy(window->getRenderer(), resumeButtonTexture, NULL, &resumeButton);
+        SDL_Rect exittomainButton = { (winW - 200) / 2, (winH - 100) / 2 + 250, 200, 100 };
+        SDL_RenderCopy(window->getRenderer(), exittomainButtonTexture, NULL, &exittomainButton);
         
-        SDL_Rect menuRect = { 0, winH - MENU_H, winW, MENU_H };
-        SDL_SetRenderDrawBlendMode(window->getRenderer(), SDL_BLENDMODE_BLEND);
-        SDL_SetRenderDrawColor(window->getRenderer(), 40, 40, 40, 200);
-        SDL_RenderFillRect(window->getRenderer(), &menuRect);
-
-        SDL_Texture* icons[] = { fireIconTex, iceIconTex, windIconTex, lightIconTex, lightningIconTex, waterIconTex };
-        for (int i = 0; i < 6; i++) {
-            SDL_Rect btnRect = { i * 100, winH - MENU_H, 100, MENU_H };
-            if (icons[i]) SDL_RenderCopy(window->getRenderer(), icons[i], NULL, &btnRect);
-            
-            if ((int)selectedType - 1 == i) {
-                SDL_SetRenderDrawColor(window->getRenderer(), 255, 255, 0, 255);
-                SDL_RenderDrawRect(window->getRenderer(), &btnRect);
-            }
-        }
     } else if (currentState == GameState::GameOver) {
     SDL_SetRenderDrawColor(window->getRenderer(), 0, 0, 0, 200);
     
@@ -394,6 +435,71 @@ void Game::render() {
     }
     
     window->display();
+}
+
+void Game::renderPlayingState() {
+    // Render background
+    if (bgTex) window->drawTextureFull(bgTex);
+
+    // Render level grid only when a tower type is selected (placement mode)
+    if (selectedType != TowerType::None) {
+        level.render(window->getRenderer());
+    }
+
+    // Render enemies and towers
+    for (auto& enemy : enemies){
+        enemy->renderHpbar(window->getRenderer());
+        window->render(*enemy);
+    }
+    for (auto& tower : towers) window->render(*tower);
+
+        
+    // Render projectiles from all towers
+    for (auto& tower : towers) {
+        for (const auto& p : tower->projectiles)
+        window->render(*p);
+    }
+
+    // Ghost Preview
+    if (selectedType != TowerType::None) {
+        int gx, gy;
+        if (level.worldToGrid(mousePos, gx, gy)) {
+            Vector2D world = level.gridToWorld(gx, gy);
+            SDL_Rect ghostRect = { (int)world.x - 16, (int)world.y - 16, 32, 32 };
+            
+            switch (selectedType) {
+                case TowerType::Fire:      SDL_SetRenderDrawColor(window->getRenderer(), 255, 0, 0, 150); break;
+                case TowerType::Ice:       SDL_SetRenderDrawColor(window->getRenderer(), 0, 150, 255, 150); break;
+                case TowerType::Wind:      SDL_SetRenderDrawColor(window->getRenderer(), 200, 255, 200, 150); break;
+                case TowerType::Light:     SDL_SetRenderDrawColor(window->getRenderer(), 255, 255, 150, 150); break;
+                case TowerType::Lightning: SDL_SetRenderDrawColor(window->getRenderer(), 200, 0, 255, 150); break;
+                case TowerType::Water:     SDL_SetRenderDrawColor(window->getRenderer(), 0, 0, 255, 150); break;
+                default: break;
+            }
+            if (!level.isEmpty(gx, gy)) SDL_SetRenderDrawColor(window->getRenderer(), 255, 0, 0, 100);
+            SDL_RenderFillRect(window->getRenderer(), &ghostRect);
+        }
+    }
+    // UI Rendering
+    int winW = window->getwidth();
+    int winH = window->getheight();
+    const int MENU_H = 100;
+    
+    SDL_Rect menuRect = { 0, winH - MENU_H, winW, MENU_H };
+    SDL_SetRenderDrawBlendMode(window->getRenderer(), SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(window->getRenderer(), 40, 40, 40, 200);
+    SDL_RenderFillRect(window->getRenderer(), &menuRect);
+
+    SDL_Texture* icons[] = { fireIconTex, iceIconTex, windIconTex, lightIconTex, lightningIconTex, waterIconTex };
+    for (int i = 0; i < 6; i++) {
+        SDL_Rect btnRect = { i * 100, winH - MENU_H, 100, MENU_H };
+        if (icons[i]) SDL_RenderCopy(window->getRenderer(), icons[i], NULL, &btnRect);
+        
+        if ((int)selectedType - 1 == i) {
+            SDL_SetRenderDrawColor(window->getRenderer(), 255, 255, 0, 255);
+            SDL_RenderDrawRect(window->getRenderer(), &btnRect);
+        }
+    }
 }
 
 void Game::run() {

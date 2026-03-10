@@ -33,6 +33,7 @@ public:
     // helpers for game logic
     bool isEmpty(int gx,int gy) const;
     void setTile(int gx,int gy, TileType type);
+    void reset();  // New method to reset the grid to all EMPTY
 
 private:
     int mapData[GRID_H][GRID_W];

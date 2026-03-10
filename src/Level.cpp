@@ -40,7 +40,7 @@ void Level::render(SDL_Renderer* renderer) {
             };
             switch ( (mapData[y][x])){
             case 0: // empty
-                SDL_SetRenderDrawColor(renderer, 50, 160, 50, 255);
+                SDL_SetRenderDrawColor(renderer, 50, 160, 50, 255); 
                 break;    
             
             case 1: // path
@@ -63,7 +63,7 @@ void Level::render(SDL_Renderer* renderer) {
             // วาดภาพลงไปในตำแหน่งที่คำนวณ Offset ไว้แล้ว
             SDL_RenderFillRect(renderer, &dest);
             // สร้าง Grid outline
-            SDL_SetRenderDrawColor(renderer, 50, 205, 50, 255);
+            SDL_SetRenderDrawColor(renderer, 229, 235, 231, 127);
             SDL_RenderDrawRect(renderer, &dest);
             }
         }
@@ -87,4 +87,12 @@ bool Level::isEmpty(int gx,int gy) const {
 
 void Level::setTile(int gx,int gy, TileType type) {
     mapData[gy][gx] = type;
+}
+
+void Level::reset() {
+    for (int y = 0; y < GRID_H; y++) {
+        for (int x = 0; x < GRID_W; x++) {
+            mapData[y][x] = 0;  // Reset all tiles to EMPTY
+        }
+    }
 }

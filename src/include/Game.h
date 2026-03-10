@@ -21,6 +21,7 @@ public:
     void handleEvents();
     void update(float deltaTime);
     void render();
+    void renderPlayingState();
     void clean();
     int findTowerAt(Vector2D worldPos) const;
     void sellTowerAtIndex(int index);
@@ -28,6 +29,7 @@ public:
     // ฟังก์ชันจัดการ Wave
     void startNextWave();
     bool isWaveFinished() const { return enemiesToSpawnInWave == 0 && enemies.empty(); }
+    void resetGame();  // New method to reset all game state
 
 private:
     bool running;
@@ -52,8 +54,12 @@ private:
     // Textures
     SDL_Texture* menuTex;
     SDL_Texture* playButtonTexture;
+    SDL_Texture* exitButtonTexture;
+    SDL_Texture* resumeButtonTexture;
+    SDL_Texture* exittomainButtonTexture;
     SDL_Texture* enemyTex;
     SDL_Texture* bossTex;
+    SDL_Texture* mainmenuTex;
     SDL_Texture* bgTex;
     SDL_Texture* fireTowerTexture = nullptr;
     SDL_Texture* iceTowerTexture = nullptr;
@@ -86,6 +92,6 @@ private:
     TowerType selectedType = TowerType::None;
     Vector2D mousePos;
 
-    enum class GameState { Menu, Playing, GameOver };
+    enum class GameState { Menu, Playing, Pause, GameOver };
     GameState currentState;
 };
