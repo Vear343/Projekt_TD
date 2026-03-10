@@ -8,9 +8,9 @@ Enemy::Enemy(float p_x, float p_y, SDL_Texture* p_texture, const std::vector<Vec
       path(p_path), 
       currentPathIndex(0), 
       reward(50),
-      maxHp(100.0f),
+      maxHp(150.0f),
       hp(maxHp),
-      speed(30.0f),
+      speed(22.0f),
       alive(true), 
       finished(false),
       rewardGiven(false),
@@ -154,6 +154,7 @@ void Enemy::applyBurn(float dmg, float duration) {
 }
 
 void Enemy::pushBack(float distance) {
+    if (BossEnemy* boss = dynamic_cast<BossEnemy*>(this)) return; // บอสไม่ถูกผลักหลัง
     if (currentPathIndex > 0) {
         Vector2D pushDir = path[currentPathIndex - 1] - Vector2D(x, y);
         float dist = std::sqrt(pushDir.x * pushDir.x + pushDir.y * pushDir.y);

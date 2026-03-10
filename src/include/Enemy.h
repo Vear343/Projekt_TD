@@ -59,8 +59,8 @@ class BossEnemy : public Enemy {
 public:
     BossEnemy(float p_x, float p_y, SDL_Texture* p_texture, const std::vector<Vector2D>& p_path)
     : Enemy(p_x, p_y, p_texture, p_path) {
-    setMaxHp(800.0f);
-    setSpeed(10.0f);
+    setMaxHp(1500.0f);
+    setSpeed(15.0f);
     setreward(500);
     width = 96;
     height = 96;
