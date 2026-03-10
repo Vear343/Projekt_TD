@@ -128,6 +128,9 @@ void Game::startNextWave() {
     // ระบบ Skip Bonus: ถ้า Wave เก่ายังไม่หมด ได้เงินเพิ่ม 100
     if (waveActive && !enemies.empty()) {
         gold += 100.0f;
+        if (spawnDelay > 0.5f) {
+            spawnDelay -= 0.1f;
+        }
     }
 
     currentWave++;
@@ -309,6 +312,7 @@ void Game::handleEvents() {
         }
     }
 }
+
 void Game::update(float deltaTime) {
     if (currentState != GameState::Playing) return;
 
