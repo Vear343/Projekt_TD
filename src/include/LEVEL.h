@@ -6,8 +6,8 @@
 class Level {
 public:
     static constexpr int TILE_SIZE = 32;
-    static constexpr int GRID_W = 28;
-    static constexpr int GRID_H = 18;
+    static constexpr int GRID_W = 26;
+    static constexpr int GRID_H = 14;
     
     // คำนวณ Offset สำหรับจอ 800x600 ให้ด่านอยู่ตรงกลาง
     static constexpr int OFFSET_X = (1280 - (GRID_W * TILE_SIZE)) / 2; // 200

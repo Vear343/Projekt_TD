@@ -59,7 +59,7 @@ bool Game::init() {
     // โหลด Texture ทั้งหมด
     enemyTex = window->loadTexture("assets/Enemy.png");
     bossTex = window->loadTexture("assets/Boss.png");
-    bgTex = window->loadTexture("assets/Sky_01.png");
+    bgTex = window->loadTexture("assets/MAP.png");
 
     // Load Towers
     fireTowerTexture      = window->loadTexture("assets/Fire_Tower.png");
@@ -88,14 +88,24 @@ bool Game::init() {
     waterIconTex = window->loadTexture("assets/Water_Tower.png");
 
     path = {
-        level.gridToWorld(0, 9),
-        level.gridToWorld(5, 9),
-        level.gridToWorld(5, 3),
-        level.gridToWorld(10, 3),
-        level.gridToWorld(10, 12),
-        level.gridToWorld(18, 12),
-        level.gridToWorld(18, 4),
-        level.gridToWorld(27, 4)
+        level.gridToWorld(0, 6),
+        level.gridToWorld(2, 5),
+        level.gridToWorld(3, 2),
+        level.gridToWorld(5, 1),
+        level.gridToWorld(7, 3),
+        level.gridToWorld(5, 7),
+        level.gridToWorld(6, 10),
+        level.gridToWorld(8, 12),
+        level.gridToWorld(10, 11),
+        level.gridToWorld(11, 9),
+        level.gridToWorld(16, 8),
+        level.gridToWorld(17, 3),
+        level.gridToWorld(19, 2),
+        level.gridToWorld(20, 3),
+        level.gridToWorld(20, 5),
+        level.gridToWorld(19, 7),
+        level.gridToWorld(21, 9),
+        level.gridToWorld(24, 9)
     };
 
     lastTime = SDL_GetPerformanceCounter();
@@ -326,9 +336,6 @@ void Game::render() {
     } else if (currentState == GameState::Playing) {
         // Render background
         if (bgTex) window->drawTextureFull(bgTex);
-
-        // Render level
-        level.render(window->getRenderer());
 
         // Render enemies and towers
         for (auto& enemy : enemies){
